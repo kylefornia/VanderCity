@@ -1,0 +1,559 @@
+{
+  "personal": {
+    "name": "Kyle Vanderfox",
+    "title": "Software Engineer",
+    "email": "kyle.vanderfox@gmail.com",
+    "phone": "(657) 221-8011",
+    "location": "Anaheim, California",
+    "website": "",
+    "linkedin": "www.linkedin.com/in/kyle-vanderfox",
+    "github": "github.com/kylefornia",
+    "summary": "Passionate Software Engineer with expertise in React, React Native, Node.js, and modern web technologies. Strong background in UI/UX design, performance optimization, and full-stack development. Committed to creating innovative solutions that benefit users and drive business growth."
+  },
+  "experience": [
+    {
+      "title": "Software Engineer",
+      "company": "Summit Interconnect",
+      "location": "Remote",
+      "startDate": "Oct 2024",
+      "endDate": "Present",
+      "current": true,
+      "description": "America’s largest privately held printed circuit board company serving clients across major technology industries. Leading full-stack development initiatives and mentoring developers.",
+      "technologies": [
+        "Next.js",
+        "React",
+        "TailwindCSS",
+        "Node.js",
+        "PostgreSQL",
+        "TypeScript",
+        "Cypress",
+        "LLMs",
+        "ProCIM",
+        "Integr8tor",
+        "Arkeo Stack"
+      ],
+      "achievements": [
+        "Redesigned and modernized the UI/UX of the quote management system for a more responsive and intuitive layout.",
+        "Implemented automatic PDF generation, printing, and email delivery to significantly reduce quoting time.",
+        "Optimized performance through caching, code splitting, virtual scrolling, and removal of redundant API calls.",
+        "Introduced optimistic UI updates to enhance perceived speed and user experience.",
+        "Mentored and trained team members in modern technologies including Next.js, TailwindCSS, and LLM integrations.",
+        "Provided guidance on UI/UX design principles, coding best practices, and automated testing using Cypress.",
+        "Integrated with engineering-specific software such as ProCIM, Integr8tor, and Arkeo Stack to eliminate local installations.",
+        "Developed an internal real-time chat system similar to Slack with contextual channels, tagging, replies, and notifications.",
+        "Implemented customer-facing features like quote PDF generation, email handling, attachments management, and online file previews.",
+        "Collaborated directly with users and management to define requirements and deliver full-stack solutions that met business needs.",
+        "Participated in weekly on-call rotations, resolving live production issues and ensuring system stability."
+      ]
+    },
+    {
+      "title": "React Native Engineer",
+      "company": "Simplistic",
+      "location": "Remote",
+      "startDate": "Sep 2021",
+      "endDate": "Oct 2024",
+      "current": false,
+      "description": "Developed a cross-platform grocery list and deal-tracking app that syncs in real time across devices and users.",
+      "technologies": [
+        "React Native",
+        "Firebase",
+        "Android",
+        "iOS"
+      ],
+      "achievements": [
+        "Built a complete cross-platform mobile application using React Native for Android and iOS.",
+        "Integrated Firebase for authentication, database, and real-time synchronization.",
+        "Developed a weighted search algorithm to improve grocery item lookup and ranking.",
+        "Implemented barcode scanning to automatically identify and cross off grocery items.",
+        "Created a real-time list synchronization feature for shared access among multiple users.",
+        "Enhanced performance with optimized rendering and state management for seamless updates."
+      ]
+    },
+    {
+      "title": "Front End Engineer",
+      "company": "Socialive",
+      "location": "Remote",
+      "startDate": "Dec 2020",
+      "endDate": "Sep 2021",
+      "current": false,
+      "description": "Worked on a video content creation and broadcasting platform serving enterprise users and live streamers.",
+      "technologies": [
+        "React",
+        "Redux",
+        "RxJS",
+        "Socket.io",
+        "WebRTC",
+        "Ant Design",
+        "Rollup",
+        "React Storybook"
+      ],
+      "achievements": [
+        "Implemented background video functionality for live broadcasts.",
+        "Developed cross-platform mute and unmute controls for broadcast guests.",
+        "Contributed majorly to rebuilding the guest platform from jQuery to React with Redux and modern tooling.",
+        "Implemented video pinning to highlight selected participants during broadcasts.",
+        "Added multi-aspect ratio support for better video layout flexibility.",
+        "Created user role systems such as Director and Presenter to manage permissions and broadcast flow.",
+        "Refactored and cleaned thousands of lines of legacy code to reduce technical debt and improve maintainability."
+      ]
+    },
+    {
+      "title": "Owner",
+      "company": "iPhoneAux / BeamPet / FlexiDrill",
+      "location": "Remote",
+      "startDate": "Nov 2019",
+      "endDate": "Dec 2020",
+      "current": false,
+      "description": "Founded and operated multiple e-commerce stores using Shopify, handling product design, marketing, and fulfillment.",
+      "technologies": [
+        "Shopify",
+        "Liquid",
+        "JavaScript",
+        "Marketing",
+        "Adobe Photoshop"
+      ],
+      "achievements": [
+        "Designed and developed custom Shopify themes tailored to each brand’s identity and product line.",
+        "Created and managed marketing campaigns via Instagram and other social media platforms to target niche audiences.",
+        "Produced video advertisements and product showcases to increase engagement and conversion rates.",
+        "Optimized online stores for performance and SEO to improve visibility and retention.",
+        "Scaled operations to over 5,000 successful sales and worldwide shipments."
+      ]
+    },
+    {
+      "title": "Front End / Full Stack Developer",
+      "company": "Anami Technologies",
+      "location": "California, USA",
+      "startDate": "Apr 2018",
+      "endDate": "Oct 2019",
+      "current": false,
+      "description": "Developed compliance and monitoring software for regulated products, working across the full stack.",
+      "technologies": [
+        "React",
+        "Styled Components",
+        "GoLang",
+        "Redux",
+        "AWS",
+        "Python",
+        "D3.js",
+        "ArcGIS"
+      ],
+      "achievements": [
+        "Built a reusable React component library used across multiple company products, with interactive sandboxing.",
+        "Developed persistent state management across sessions using Redux.",
+        "Created concise, functional React components leveraging Hooks and Styled Components.",
+        "Handled API requests and backend integration with GoLang (Gorilla/Mux).",
+        "Enhanced perceived performance with placeholders and 60fps animations.",
+        "Implemented secure authentication with Two-Factor Authentication (2FA) and JWT tokens.",
+        "Redesigned the flagship product’s user interface using Sketch to improve user experience.",
+        "Developed interactive data visualizations using D3.js with export features for images and CSVs.",
+        "Built PDF upload and data extraction using Python, AWS Lambda, and AWS S3.",
+        "Integrated PDF annotation functionality for user commenting and approvals.",
+        "Developed QuickBooks API integration for revenue tracking and accounting automation.",
+        "Implemented ArcGIS map visualizations with dynamic, real-time data integration.",
+        "Created a Trello-like workflow management feature with drag-and-drop interactions.",
+        "Built full-stack modules including invoicing, point of sale, user management, and workflow automation."
+      ]
+    },
+    {
+      "title": "Front End Developer",
+      "company": "TextTrade",
+      "location": "Remote",
+      "startDate": "Oct 2017",
+      "endDate": "Jan 2018",
+      "current": false,
+      "description": "Developed a peer-to-peer marketplace for students to buy and sell textbooks within campus.",
+      "technologies": [
+        "React",
+        "Next.js",
+        "MongoDB",
+        "Node.js"
+      ],
+      "achievements": [
+        "Developed the platform using React and Next.js with a mobile-first UI for improved accessibility.",
+        "Implemented social login for quick account creation and onboarding.",
+        "Built a book cover recognition system that auto-filled book details from uploaded photos.",
+        "Added SMS notification functionality to alert users of updates and messages.",
+        "Deployed the application using Heroku and optimized backend performance with MongoDB."
+      ]
+    },
+    {
+      "title": "Full Stack Developer",
+      "company": "DZRH Mobile News App",
+      "location": "Remote",
+      "startDate": "May 2017",
+      "endDate": "Aug 2017",
+      "current": false,
+      "description": "Built a cross-platform news reader and live streaming mobile application for a national news station.",
+      "technologies": [
+        "React Native",
+        "Firebase",
+        "Node.js"
+      ],
+      "achievements": [
+        "Developed a cross-platform mobile application using React Native with Firebase integration.",
+        "Implemented a multilingual comment section with profanity filtering in two languages.",
+        "Enabled users to personalize news feeds by selecting topics of interest.",
+        "Adopted an offline-first architecture to ensure usability without a stable internet connection.",
+        "Added a bookmarking feature for reading articles later.",
+        "Integrated live video and radio streaming that functioned even when the app was minimized or the screen was off."
+      ]
+    },
+    {
+      "title": "Full Stack Developer / Organizer / Lead Designer",
+      "company": "HackTheClimate",
+      "location": "Philippines",
+      "startDate": "Feb 2013",
+      "endDate": "Mar 2017",
+      "current": false,
+      "description": "Organized climate-focused hackathons and developed software solutions to address environmental issues.",
+      "technologies": [
+        "C#",
+        ".NET",
+        "React",
+        "UI Design"
+      ],
+      "achievements": [
+        "Organized and managed three major hackathons with over 1,000 participants.",
+        "Developed and maintained a web portal for project and code submission during competitions.",
+        "Designed the organization’s overall branding and visual identity.",
+        "Reviewed and assessed participant code submissions for technical and functional quality.",
+        "Mentored hackathon finalists to help them secure post-event funding and support."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "BS - Information Systems",
+      "institution": "De La Salle-College of St. Benilde",
+      "location": "Philippines",
+      "graduationDate": "2016",
+      "gpa": "",
+      "relevantCoursework": [
+        "Information Systems",
+        "Software Development",
+        "Database Management",
+        "System Analysis"
+      ]
+    },
+    {
+      "degree": "BS - Mechanical Engineering",
+      "institution": "Mapua Institute of Technology",
+      "location": "Philippines",
+      "graduationDate": "2013",
+      "gpa": "",
+      "relevantCoursework": [
+        "Engineering Principles",
+        "Problem Solving",
+        "Technical Analysis",
+        "Project Management"
+      ]
+    }
+  ],
+  "skills": {
+    "strong": [
+      {
+        "name": "JavaScript",
+        "level": "Expert"
+      },
+      {
+        "name": "React JS",
+        "level": "Expert"
+      },
+      {
+        "name": "React Native",
+        "level": "Expert"
+      },
+      {
+        "name": "Node JS",
+        "level": "Advanced"
+      },
+      {
+        "name": "TypeScript",
+        "level": "Advanced"
+      },
+      {
+        "name": "HTML5",
+        "level": "Expert"
+      },
+      {
+        "name": "CSS3",
+        "level": "Expert"
+      },
+      {
+        "name": "UI/UX Design",
+        "level": "Advanced"
+      },
+      {
+        "name": "TailwindCSS",
+        "level": "Expert"
+      },
+      {
+        "name": "NextJS",
+        "level": "Advanced"
+      },
+      {
+        "name": "Vite",
+        "level": "Advanced"
+      },
+      {
+        "name": "Azure",
+        "level": "Intermediate"
+      }
+    ],
+    "experienced": [
+      {
+        "name": "PostgreSQL",
+        "level": "Advanced"
+      },
+      {
+        "name": "AWS",
+        "level": "Intermediate"
+      },
+      {
+        "name": "Docker",
+        "level": "Intermediate"
+      },
+      {
+        "name": "MongoDB",
+        "level": "Advanced"
+      },
+      {
+        "name": "Firebase",
+        "level": "Advanced"
+      },
+      {
+        "name": "Java",
+        "level": "Intermediate"
+      },
+      {
+        "name": "C#",
+        "level": "Intermediate"
+      },
+      {
+        "name": "ASP .NET",
+        "level": "Intermediate"
+      },
+      {
+        "name": "Electron",
+        "level": "Advanced"
+      },
+      {
+        "name": "Git",
+        "level": "Advanced"
+      },
+      {
+        "name": "D3.js",
+        "level": "Intermediate"
+      },
+      {
+        "name": "GoLang",
+        "level": "Intermediate"
+      }
+    ],
+    "specialized": [
+      {
+        "name": "Redux",
+        "level": "Advanced"
+      },
+      {
+        "name": "React Router",
+        "level": "Advanced"
+      },
+      {
+        "name": "Mobx",
+        "level": "Intermediate"
+      },
+      {
+        "name": "React Hooks",
+        "level": "Expert"
+      },
+      {
+        "name": "Styled Components",
+        "level": "Advanced"
+      },
+      {
+        "name": "WebSockets",
+        "level": "Advanced"
+      },
+      {
+        "name": "Puppeteer",
+        "level": "Intermediate"
+      },
+      {
+        "name": "ArcGIS",
+        "level": "Intermediate"
+      },
+      {
+        "name": "Virtual Reality",
+        "level": "Intermediate"
+      },
+      {
+        "name": "WebRTC",
+        "level": "Intermediate"
+      },
+      {
+        "name": "LLMs",
+        "level": "Intermediate"
+      }
+    ]
+  },
+  "projects": [
+    {
+      "name": "PetLog 🐶",
+      "description": "A cross-platform mobile app to assist pet owners in managing their pets. Features social feed, reminders for appointments, and health tracking with walk and food tracking capabilities.",
+      "technologies": [
+        "React Native",
+        "Supabase",
+        "Android",
+        "iOS"
+      ],
+      "githubUrl": "",
+      "liveUrl": "",
+      "image": "/images/projects/petlog.jpg",
+      "featured": true
+    },
+    {
+      "name": "Webo 🔒",
+      "description": "A cross-platform desktop application built to protect children while using the internet with on-device AI. Uses modern large language models to summarize and rate websites across multiple browsers.",
+      "technologies": [
+        "Electron",
+        "React",
+        "LangChain",
+        "Ollama",
+        "Microsoft Phi 3 AI",
+        "Tailwind CSS"
+      ],
+      "githubUrl": "",
+      "liveUrl": "",
+      "image": "/images/projects/webo.jpg",
+      "featured": true
+    },
+    {
+      "name": "VRilla 👓",
+      "description": "VR + AI for Real Estate. Teleport across homes with VR to save time and money. Get answers through chat, call, or VR with real estate agents or AI agents available 24/7 all from the browser.",
+      "technologies": [
+        "React",
+        "TailwindCSS",
+        "Three JS",
+        "Supabase",
+        "Aframe",
+        "Socket.io",
+        "Meta LLama 3 AI"
+      ],
+      "githubUrl": "",
+      "liveUrl": "",
+      "image": "/images/projects/vrilla.jpg",
+      "featured": true
+    },
+    {
+      "name": "Mirada (Chrome Extension)",
+      "description": "Mirada is a chrome extension that replaces your 'New Tab' page into a customizable desktop experience. Includes a variety of tools built with React JS with full desktop-like experience supporting unlimited open windows.",
+      "technologies": [
+        "React JS",
+        "Chrome Extension",
+        "Code Splitting",
+        "Performance Optimization"
+      ],
+      "githubUrl": "",
+      "liveUrl": "https://mirada.netlify.app",
+      "chromeUrl": "https://chrome.google.com/webstore/detail/mirada/jpdpnkbbkfhaellbghfmkjlokediemfm",
+      "image": "/images/projects/mirada.jpg",
+      "featured": true
+    },
+    {
+      "name": "NYOUS.LIVE",
+      "description": "NYOUS.LIVE is an AI-powered autonomous news network. Leverages modern AI tech to generate content such as articles and videos based on real events with valid sources.",
+      "technologies": [
+        "Next JS",
+        "React",
+        "Tailwind CSS",
+        "Sanity CMS",
+        "Google Cloud",
+        "CloudFlare"
+      ],
+      "githubUrl": "",
+      "liveUrl": "https://nyous.live",
+      "socialUrl": "https://www.tiktok.com/@nyous.live",
+      "image": "/images/projects/nyous.jpg",
+      "featured": true
+    },
+    {
+      "name": "NFTFLEX",
+      "description": "A web app that allows users to display and flex their NFTs on different displays such as TVs, Laptops, Tablets, or any other device. Connects to crypto wallets and allows viewing famous celebrities' NFT wallets.",
+      "technologies": [
+        "Preact JS",
+        "Metamask",
+        "Crypto Wallets",
+        "Code Splitting",
+        "Performance Optimization"
+      ],
+      "githubUrl": "",
+      "liveUrl": "castcoinapp.web.app",
+      "image": "/images/projects/nftflex.jpg",
+      "featured": false
+    },
+    {
+      "name": "Thank You For Your Service",
+      "description": "Platform to send thank you notes to frontliners who served during COVID-19 pandemic. Progressive web app with offline persistence and caching. Includes geotagging of messages being sent worldwide.",
+      "technologies": [
+        "React JS",
+        "Node.js",
+        "Firebase",
+        "Three.js",
+        "Progressive Web App"
+      ],
+      "githubUrl": "https://github.com/kylefornia/tyfy.services",
+      "liveUrl": "https://tyfy.services",
+      "image": "/images/projects/tyfy.jpg",
+      "featured": true
+    }
+  ],
+  "awards": [
+    {
+      "name": "Top 25 under 25",
+      "issuer": "De La Salle-College of St. Benilde",
+      "date": "2016",
+      "description": "Awarded for various contributions in technology and society"
+    },
+    {
+      "name": "HackTheClimate 2014 Winner",
+      "issuer": "HackTheClimate",
+      "date": "2014",
+      "description": "1st Place among 300 student and professional developers during the country's first 56-hour hackathon"
+    },
+    {
+      "name": "Business Idea Development Awards Finalist",
+      "issuer": "National Competition",
+      "date": "2015",
+      "description": "Won 3rd Place among 150 different schools across the country"
+    },
+    {
+      "name": "HackTheClimate 2015 Finalist",
+      "issuer": "HackTheClimate",
+      "date": "2015",
+      "description": "Developed a platform for efficient Urban Farming across different sectors powered by technology"
+    }
+  ],
+  "languages": [
+    {
+      "name": "English",
+      "proficiency": "Native"
+    },
+    {
+      "name": "Filipino",
+      "proficiency": "Native"
+    }
+  ],
+  "interests": [
+    "Basketball",
+    "Technology Innovation",
+    "AI and Machine Learning",
+    "Virtual Reality Development",
+    "Open Source Contributions",
+    "Hackathon Organization",
+    "Community Building",
+    "Continuous Learning",
+    "Problem Solving"
+  ]
+}
