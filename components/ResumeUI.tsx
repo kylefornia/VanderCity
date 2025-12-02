@@ -12,6 +12,7 @@ import {
   IoCallOutline,
   IoChevronBackOutline,
   IoChevronForwardOutline,
+  IoChevronUpOutline,
   IoCloseOutline,
   IoCodeSlashOutline,
   IoGlobeOutline,
@@ -24,8 +25,8 @@ import {
 } from "react-icons/io5";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useResume } from "@/context/ResumeContext";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useResume } from "@/context/ResumeContext";
 
 const ResumeUI = () => {
   const {
@@ -42,8 +43,17 @@ const ResumeUI = () => {
   const [logoErrors, setLogoErrors] = useState<Set<string>>(new Set());
   const [scrollY, setScrollY] = useState(0);
   const [activeScreenshotIndex, setActiveScreenshotIndex] = useState(0);
+  const [sheetState, setSheetState] = useState<
+    "collapsed" | "half" | "expanded"
+  >("half");
+  const [sheetDragY, setSheetDragY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = useRef(0);
+  const dragStartState = useRef<"collapsed" | "half" | "expanded">("half");
+  const currentDragY = useRef(0); // Use ref to track current drag distance
   const headerRef = useRef<HTMLDivElement>(null);
   const detailViewRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
   const selectedExperience =
@@ -68,15 +78,157 @@ const ResumeUI = () => {
 
   const handleBackToList = () => {
     setSelectedBuilding(null);
-    // Close sidebar on mobile when going back to list
-    if (isMobile) {
-      setIsLeftPanelVisible(false);
-    }
+    // Don't close the sheet when going back to list
   };
 
   const handleToggleLeftPanel = () => {
     setIsLeftPanelVisible(!isLeftPanelVisible);
+    // Reset to half screen when opening
+    if (!isLeftPanelVisible) {
+      setSheetState("half");
+    }
   };
+
+  const handleToggleSheetExpanded = () => {
+    // Cycle through states: half -> expanded -> half
+    if (sheetState === "half") {
+      setSheetState("expanded");
+    } else if (sheetState === "expanded") {
+      setSheetState("half");
+    } else {
+      setSheetState("half");
+    }
+  };
+
+  const handleSheetDragStart = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!isMobile) return;
+    e.stopPropagation();
+    e.preventDefault();
+    setIsDragging(true);
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    dragStartY.current = clientY;
+    dragStartState.current = sheetState;
+    currentDragY.current = 0;
+    setSheetDragY(0);
+  };
+
+  const handleSheetDragMove = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!isMobile || !isDragging) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    // When swiping up, clientY decreases, so deltaY is negative
+    // When swiping down, clientY increases, so deltaY is positive
+    const deltaY = clientY - dragStartY.current;
+    currentDragY.current = deltaY; // Store in ref for immediate access
+    setSheetDragY(deltaY);
+  };
+
+  const handleSheetDragEnd = () => {
+    if (!isMobile || !isDragging) return;
+
+    // Use ref to get the most current drag distance (state might be stale)
+    const dragDistance = currentDragY.current;
+    const currentState = dragStartState.current;
+
+    const viewportHeight = window.innerHeight;
+    const navBarHeight = 64;
+    const maxHeight = viewportHeight - navBarHeight;
+    const halfHeight = viewportHeight * 0.5;
+    const collapsedHeight = 120; // Peek height
+
+    // Calculate current height during drag
+    let baseHeight: number;
+    if (currentState === "expanded") {
+      baseHeight = maxHeight;
+    } else if (currentState === "half") {
+      baseHeight = halfHeight;
+    } else {
+      baseHeight = collapsedHeight;
+    }
+
+    const currentHeight = Math.max(
+      collapsedHeight,
+      Math.min(maxHeight, baseHeight - dragDistance)
+    );
+
+    // Determine which state to snap to based on current height
+    // Use thresholds: collapsed < 200px, half < 70% of screen, expanded >= 70%
+    const threshold1 = 200; // Between collapsed and half
+    const threshold2 = viewportHeight * 0.7; // Between half and expanded
+
+    let newState: "collapsed" | "half" | "expanded";
+
+    if (currentHeight < threshold1) {
+      newState = "collapsed";
+    } else if (currentHeight < threshold2) {
+      newState = "half";
+    } else {
+      newState = "expanded";
+    }
+
+    // Also consider drag direction for better UX
+    if (dragDistance < -30) {
+      // Swiping up - move to next higher state
+      if (currentState === "collapsed") newState = "half";
+      else if (currentState === "half") newState = "expanded";
+    } else if (dragDistance > 30) {
+      // Swiping down - move to next lower state
+      if (currentState === "expanded") newState = "half";
+      else if (currentState === "half") newState = "collapsed";
+    }
+
+    // Reset dragging state first
+    setIsDragging(false);
+    setSheetDragY(0);
+    currentDragY.current = 0;
+
+    // Set the new state
+    setSheetState(newState);
+  };
+
+  // Add global mouse/touch listeners for dragging
+  useEffect(() => {
+    if (!isMobile || !isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      const deltaY = e.clientY - dragStartY.current;
+      currentDragY.current = deltaY;
+      setSheetDragY(deltaY);
+    };
+
+    const handleMouseUp = () => {
+      handleSheetDragEnd();
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const deltaY = e.touches[0].clientY - dragStartY.current;
+      currentDragY.current = deltaY;
+      setSheetDragY(deltaY);
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleSheetDragEnd();
+    };
+
+    document.addEventListener("mousemove", handleMouseMove, { passive: false });
+    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("touchend", handleTouchEnd, { passive: false });
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isMobile, isDragging, sheetDragY]);
 
   const handleKeyDownToggle = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -100,11 +252,14 @@ const ResumeUI = () => {
     id: string
   ) => {
     setSelectedBuilding({ category, id });
-    // Zoom to the building
-    if (zoomToBuilding) {
-      zoomToBuilding(category, id);
+    // Don't zoom or close on mobile - let user choose to view on map
+  };
+
+  const handleViewOnMap = () => {
+    if (selectedBuilding && zoomToBuilding) {
+      zoomToBuilding(selectedBuilding.category, selectedBuilding.id);
     }
-    // Close sidebar on mobile when selecting a building
+    // Close sidebar on mobile after viewing on map
     if (isMobile) {
       setIsLeftPanelVisible(false);
     }
@@ -219,31 +374,6 @@ const ResumeUI = () => {
     };
   }, [selectedExperience]);
 
-  // Close sidebar on mobile when clicking outside
-  useEffect(() => {
-    if (!isMobile || !isLeftPanelVisible) return;
-
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const sidebar = target.closest('[data-sidebar]');
-      const toggleButton = target.closest('[data-toggle-button]');
-      
-      if (!sidebar && !toggleButton) {
-        setIsLeftPanelVisible(false);
-      }
-    };
-
-    // Add slight delay to prevent immediate close on open
-    const timeoutId = setTimeout(() => {
-      document.addEventListener("click", handleClickOutside);
-    }, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, [isMobile, isLeftPanelVisible, setIsLeftPanelVisible]);
-
   return (
     <>
       {/* Toggle Button - Desktop Only */}
@@ -264,7 +394,9 @@ const ResumeUI = () => {
             transform: "translateZ(0)",
             backfaceVisibility: "hidden",
           }}
-          aria-label={isLeftPanelVisible ? "Hide left panel" : "Show left panel"}
+          aria-label={
+            isLeftPanelVisible ? "Hide left panel" : "Show left panel"
+          }
           tabIndex={0}
         >
           {isLeftPanelVisible ? (
@@ -280,7 +412,26 @@ const ResumeUI = () => {
         <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-gray-200 shadow-lg safe-area-inset-bottom">
           <div className="flex items-center justify-center h-16 px-4">
             <button
-              onClick={handleToggleLeftPanel}
+              onClick={() => {
+                if (!isLeftPanelVisible) {
+                  setIsLeftPanelVisible(true);
+                  setSheetState("half"); // Start at half when opening
+                } else {
+                  // If expanded, close completely. Otherwise cycle through states
+                  if (sheetState === "expanded") {
+                    // Close completely
+                    setIsLeftPanelVisible(false);
+                    // Reset state after a brief delay to ensure smooth transition
+                    setTimeout(() => {
+                      setSheetState("half");
+                    }, 300);
+                  } else if (sheetState === "half") {
+                    setSheetState("expanded");
+                  } else if (sheetState === "collapsed") {
+                    setSheetState("half");
+                  }
+                }
+              }}
               onKeyDown={handleKeyDownToggle}
               data-toggle-button
               className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation ${
@@ -288,18 +439,31 @@ const ResumeUI = () => {
                   ? "bg-blue-600 text-white shadow-md"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
               }`}
-              aria-label={isLeftPanelVisible ? "Close menu" : "Open menu"}
+              aria-label={
+                !isLeftPanelVisible
+                  ? "Open menu"
+                  : sheetState === "expanded"
+                  ? "Close menu"
+                  : sheetState === "half"
+                  ? "Expand menu"
+                  : "Expand menu"
+              }
               tabIndex={0}
             >
-              {isLeftPanelVisible ? (
+              {!isLeftPanelVisible ? (
+                <>
+                  <IoMenuOutline className="w-5 h-5" />
+                  <span className="text-sm font-medium">Menu</span>
+                </>
+              ) : sheetState === "expanded" ? (
                 <>
                   <IoCloseOutline className="w-5 h-5" />
                   <span className="text-sm font-medium">Close</span>
                 </>
               ) : (
                 <>
-                  <IoMenuOutline className="w-5 h-5" />
-                  <span className="text-sm font-medium">Menu</span>
+                  <IoChevronUpOutline className="w-5 h-5" />
+                  <span className="text-sm font-medium">Expand</span>
                 </>
               )}
             </button>
@@ -307,22 +471,19 @@ const ResumeUI = () => {
         </div>
       )}
 
-      {/* Overlay for mobile */}
-      {isMobile && isLeftPanelVisible && (
-        <div
-          className="fixed inset-0 bg-black/50 z-[52] transition-opacity duration-200"
-          onClick={() => setIsLeftPanelVisible(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Left Panel Container - Google Style */}
+      {/* Left Panel Container - Desktop: Sidebar, Mobile: Bottom Sheet */}
       <div
         data-sidebar
-        className={`absolute top-0 left-0 h-full transition-[opacity,transform] duration-200 ease-in-out ${
-          isMobile ? "z-[55]" : "z-40"
-        } ${
-          isLeftPanelVisible
+        className={`${
+          isMobile
+            ? "fixed bottom-0 left-0 right-0 z-[55]"
+            : "absolute top-0 left-0 h-full z-40"
+        } transition-all duration-300 ease-out ${
+          isMobile
+            ? isLeftPanelVisible
+              ? "translate-y-0"
+              : "translate-y-full pointer-events-none"
+            : isLeftPanelVisible
             ? "opacity-100 translate-x-0 pointer-events-auto"
             : "opacity-0 -translate-x-full pointer-events-none"
         }`}
@@ -334,19 +495,104 @@ const ResumeUI = () => {
         }}
       >
         <div
-          className={`bg-white shadow-lg flex flex-col overflow-hidden transition-[width] duration-150 ease-in-out ${
+          ref={sheetRef}
+          className={`bg-white shadow-2xl flex flex-col overflow-hidden ${
             isMobile
-              ? "w-full h-full rounded-none m-0"
-              : `rounded-lg m-2 ${
+              ? `w-full rounded-t-3xl ${
+                  isDragging ? "" : "transition-all duration-300 ease-out"
+                }`
+              : `rounded-lg m-2 transition-[width] duration-150 ease-in-out ${
                   selectedBuilding ? "w-[520px]" : "w-[420px]"
                 }`
           }`}
           style={
             isMobile
-              ? { height: "100%" }
+              ? (() => {
+                  const viewportHeight = window.innerHeight;
+                  const navBarHeight = 64; // 4rem = 64px
+                  const maxHeight = viewportHeight - navBarHeight;
+                  const halfHeight = viewportHeight * 0.5;
+                  const collapsedHeight = 153; // Peek height
+
+                  if (isDragging) {
+                    // During drag, adjust height based on drag distance
+                    let baseHeight: number;
+                    if (dragStartState.current === "expanded") {
+                      baseHeight = maxHeight;
+                    } else if (dragStartState.current === "half") {
+                      baseHeight = halfHeight;
+                    } else {
+                      baseHeight = collapsedHeight;
+                    }
+
+                    const newHeight = Math.max(
+                      collapsedHeight,
+                      Math.min(maxHeight, baseHeight - sheetDragY)
+                    );
+                    return {
+                      height: `${newHeight}px`,
+                      maxHeight: `${maxHeight}px`,
+                    };
+                  } else {
+                    // When not dragging, use fixed heights based on state
+                    // If sheet is not visible, height should be 0
+                    if (!isLeftPanelVisible) {
+                      return {
+                        height: "0px",
+                        maxHeight: `${maxHeight}px`,
+                      };
+                    }
+
+                    let height: string;
+                    if (sheetState === "expanded") {
+                      height = `${maxHeight}px`;
+                    } else if (sheetState === "half") {
+                      height = `${halfHeight}px`;
+                    } else {
+                      height = `${collapsedHeight}px`;
+                    }
+                    return {
+                      height,
+                      maxHeight: `${maxHeight}px`,
+                    };
+                  }
+                })()
               : { height: "calc(100% - 1rem)" }
           }
         >
+          {/* Drag Handle - Mobile Only */}
+          {isMobile && (
+            <div
+              className="flex items-center justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-manipulation select-none"
+              onMouseDown={handleSheetDragStart}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                handleSheetDragStart(e);
+              }}
+              onClick={(e) => {
+                // Only toggle on click if we didn't just drag
+                if (!isDragging && Math.abs(sheetDragY) < 5) {
+                  handleToggleSheetExpanded();
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleToggleSheetExpanded();
+                }
+              }}
+              aria-label={
+                sheetState === "expanded"
+                  ? "Collapse sheet"
+                  : sheetState === "half"
+                  ? "Expand or collapse sheet"
+                  : "Expand sheet"
+              }
+              tabIndex={0}
+            >
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+            </div>
+          )}
           {/* Profile Section - Only show in list view */}
           {!selectedBuilding && (
             <div className="px-6 py-3 bg-white border-b border-gray-200">
@@ -465,8 +711,8 @@ const ResumeUI = () => {
 
           {/* Header Section with Back Button - Only show in detail view */}
           {selectedBuilding && (
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
-              <div className="flex items-center gap-3">
+            <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
+              <div className="flex items-center gap-2 md:gap-3">
                 <button
                   onClick={handleBackToList}
                   onKeyDown={(e) => {
@@ -475,24 +721,46 @@ const ResumeUI = () => {
                       handleBackToList();
                     }
                   }}
-                  className="flex items-center justify-center w-10 h-10 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 flex-shrink-0"
+                  className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 transition-all duration-200 flex-shrink-0 touch-manipulation"
                   aria-label="Back to list"
                   tabIndex={0}
                 >
-                  <IoArrowBackOutline className="w-5 h-5" />
+                  <IoArrowBackOutline className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h1 className="text-lg font-medium text-gray-900 leading-tight">
+                  <h1 className="text-base md:text-lg font-medium text-gray-900 leading-tight truncate">
                     {resume.name}
                   </h1>
-                  <p className="text-sm text-gray-600 mt-0.5">{resume.title}</p>
+                  <p className="text-xs md:text-sm text-gray-600 mt-0.5 truncate">
+                    {resume.title}
+                  </p>
                 </div>
+                {/* View on Map Button - Mobile Only */}
+                {isMobile && (
+                  <button
+                    onClick={handleViewOnMap}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleViewOnMap();
+                      }
+                    }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 flex-shrink-0 touch-manipulation focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    aria-label="View on map"
+                    tabIndex={0}
+                  >
+                    <IoLocationOutline className="w-4 h-4" />
+                    <span className="text-xs font-medium whitespace-nowrap">
+                      View on Map
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
           )}
 
-          {/* Search Bar - Google Maps Style - Only show in list view */}
-          {!selectedBuilding && (
+          {/* Search Bar - Google Maps Style - Only show in list view, hidden on mobile */}
+          {!selectedBuilding && !isMobile && (
             <div className="px-6 py-4 border-b border-gray-200 bg-white">
               <div className="relative">
                 <IoSearchOutline className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
@@ -527,7 +795,9 @@ const ResumeUI = () => {
             <div
               key="detail-view"
               ref={detailViewRef}
-              className="flex-1 overflow-y-auto opacity-0 animate-[fadeIn_0.3s_ease-in-out_forwards]"
+              className={`flex-1 overflow-y-auto opacity-0 animate-[fadeIn_0.3s_ease-in-out_forwards] ${
+                isMobile ? "pb-20" : ""
+              }`}
             >
               {/* Work Experience Detail */}
               {selectedExperience && (
@@ -900,7 +1170,9 @@ const ResumeUI = () => {
             /* List View */
             <div
               key="list-view"
-              className="flex-1 overflow-y-auto opacity-0 animate-[fadeIn_0.3s_ease-in-out_forwards]"
+              className={`flex-1 overflow-y-auto opacity-0 animate-[fadeIn_0.3s_ease-in-out_forwards] ${
+                isMobile ? "pb-20" : ""
+              }`}
             >
               {!hasResults && searchQuery ? (
                 <div className="p-8 text-center">
@@ -918,8 +1190,18 @@ const ResumeUI = () => {
                         {filteredExperiences.map((exp) => {
                           const isSelected =
                             selectedBuilding !== null &&
-                            (selectedBuilding as { category: string; id: string }).category === "work" &&
-                            (selectedBuilding as { category: string; id: string }).id === exp.id;
+                            (
+                              selectedBuilding as {
+                                category: string;
+                                id: string;
+                              }
+                            ).category === "work" &&
+                            (
+                              selectedBuilding as {
+                                category: string;
+                                id: string;
+                              }
+                            ).id === exp.id;
                           return (
                             <button
                               key={exp.id}
@@ -999,8 +1281,18 @@ const ResumeUI = () => {
                         {filteredEducation.map((edu) => {
                           const isSelected =
                             selectedBuilding !== null &&
-                            (selectedBuilding as { category: string; id: string }).category === "education" &&
-                            (selectedBuilding as { category: string; id: string }).id === edu.id;
+                            (
+                              selectedBuilding as {
+                                category: string;
+                                id: string;
+                              }
+                            ).category === "education" &&
+                            (
+                              selectedBuilding as {
+                                category: string;
+                                id: string;
+                              }
+                            ).id === edu.id;
                           return (
                             <button
                               key={edu.id}
@@ -1080,8 +1372,18 @@ const ResumeUI = () => {
                         {filteredProjects.map((proj) => {
                           const isSelected =
                             selectedBuilding !== null &&
-                            (selectedBuilding as { category: string; id: string }).category === "project" &&
-                            (selectedBuilding as { category: string; id: string }).id === proj.id;
+                            (
+                              selectedBuilding as {
+                                category: string;
+                                id: string;
+                              }
+                            ).category === "project" &&
+                            (
+                              selectedBuilding as {
+                                category: string;
+                                id: string;
+                              }
+                            ).id === proj.id;
                           return (
                             <button
                               key={proj.id}
@@ -1167,8 +1469,18 @@ const ResumeUI = () => {
                         {filteredInterests.map((int) => {
                           const isSelected =
                             selectedBuilding !== null &&
-                            (selectedBuilding as { category: string; id: string }).category === "interest" &&
-                            (selectedBuilding as { category: string; id: string }).id === int.id;
+                            (
+                              selectedBuilding as {
+                                category: string;
+                                id: string;
+                              }
+                            ).category === "interest" &&
+                            (
+                              selectedBuilding as {
+                                category: string;
+                                id: string;
+                              }
+                            ).id === int.id;
                           const isSports = int.category === "sports";
                           const isHobby = int.category === "hobby";
 
