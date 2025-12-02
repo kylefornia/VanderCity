@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useRef, memo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -68,7 +66,7 @@ const Person = memo(({
     [skinColor]
   );
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (!personRef.current || path.length === 0) return;
 
     const currentPoint = path[currentPathIndex.current];
@@ -138,9 +136,12 @@ const Person = memo(({
 
 Person.displayName = 'Person';
 
+import { useSceneSettings } from "@/context/SceneSettingsContext";
+
 const People = () => {
-  // Ground offset for voxel person (height is ~1.7 units, so center at 0.85)
-  const groundOffset = 0.85;
+  // Ground offset for voxel person - set to 0 to match basketball players
+  const groundOffset = 0;
+  const { peopleCount } = useSceneSettings();
 
   // Create people instances walking along sidewalks
   const people = useMemo(() => {
@@ -148,7 +149,7 @@ const People = () => {
     const totalSize = GRID_SIZE * BLOCK_SIZE + (GRID_SIZE + 1) * STREET_WIDTH;
     const startPos = -totalSize / 2;
     const groundBound = 80;
-    const numPeople = 30; // Number of people for a busy city
+    const numPeople = peopleCount;
 
     // Helper RNG function
     const rng = (seed: number) => {
@@ -357,7 +358,7 @@ const People = () => {
     }
 
     return peopleElements;
-  }, [groundOffset]);
+  }, [groundOffset, peopleCount]);
 
   return <group>{people}</group>;
 };

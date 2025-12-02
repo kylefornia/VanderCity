@@ -1,6 +1,6 @@
 "use client";
 
-import React, {
+import {
   ReactNode,
   createContext,
   useContext,
@@ -21,6 +21,8 @@ export interface JobExperience {
   description: string;
   technologies: string[];
   achievements?: string[];
+  logo?: string;
+  coverPhoto?: string;
   buildingPosition: [number, number, number];
   buildingColor: string;
 }
@@ -57,6 +59,7 @@ export interface PersonalProject {
   githubUrl?: string;
   liveUrl?: string;
   image?: string;
+  screenshots?: string[];
   featured?: boolean;
   buildingPosition: [number, number, number];
   buildingColor: string;
@@ -79,14 +82,16 @@ export interface ResumeData {
   personalProjects: PersonalProject[];
 }
 
+// Grid constants
+const BLOCK_SIZE = 20;
+const STREET_WIDTH = 4;
+const GRID_SIZE = 5;
+
 // Helper function to convert grid coordinates to world position
 const gridToWorldPosition = (
   row: number,
   col: number
 ): [number, number, number] => {
-  const BLOCK_SIZE = 20;
-  const STREET_WIDTH = 4;
-  const GRID_SIZE = 5;
   const totalSize = GRID_SIZE * BLOCK_SIZE + (GRID_SIZE + 1) * STREET_WIDTH;
   const startPos = -totalSize / 2;
 
@@ -103,27 +108,61 @@ const gridToWorldPosition = (
   return [x, 0, z];
 };
 
+// Helper function to convert world position to grid coordinates
+const worldToGridPosition = (
+  position: [number, number, number]
+): [number, number] | null => {
+  const [x, , z] = position;
+  const totalSize = GRID_SIZE * BLOCK_SIZE + (GRID_SIZE + 1) * STREET_WIDTH;
+  const startPos = -totalSize / 2;
+
+  const col = Math.round(
+    (x - startPos - STREET_WIDTH - BLOCK_SIZE / 2) / (BLOCK_SIZE + STREET_WIDTH)
+  );
+  const row = Math.round(
+    (z - startPos - STREET_WIDTH - BLOCK_SIZE / 2) / (BLOCK_SIZE + STREET_WIDTH)
+  );
+
+  if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+    return [row, col];
+  }
+  return null;
+};
+
 // Helper function to generate work experience positions in a ring around center
 const generateWorkPosition = (index: number): [number, number, number] => {
-  const CENTER_ROW = 2;
-  const CENTER_COL = 2;
-  const GRID_SIZE = 5;
 
   // Ring positions around center (2,2)
   // First ring: positions adjacent to center
   const ringPositions: Array<[number, number]> = [
-    [1, 1], [1, 2], [1, 3], // Top row
-    [2, 1], [2, 3], // Middle row (skip center)
-    [3, 1], [3, 2], [3, 3], // Bottom row
+    [1, 1],
+    [1, 2],
+    [1, 3], // Top row
+    [2, 1],
+    [2, 3], // Middle row (skip center)
+    [3, 1],
+    [3, 2],
+    [3, 3], // Bottom row
   ];
 
   // If we have more work experiences, add second ring
   const secondRingPositions: Array<[number, number]> = [
-    [0, 0], [0, 1], [0, 2], [0, 3], [0, 4], // Top row
-    [1, 0], [1, 4], // Left and right
-    [2, 0], [2, 4], // Left and right
-    [3, 0], [3, 4], // Left and right
-    [4, 0], [4, 1], [4, 2], [4, 3], [4, 4], // Bottom row
+    [0, 0],
+    [0, 1],
+    [0, 2],
+    [0, 3],
+    [0, 4], // Top row
+    [1, 0],
+    [1, 4], // Left and right
+    [2, 0],
+    [2, 4], // Left and right
+    [3, 0],
+    [3, 4], // Left and right
+    [4, 0],
+    [4, 1],
+    [4, 2],
+    [4, 3],
+    [4, 4], // Bottom row
   ];
 
   const allPositions = [...ringPositions, ...secondRingPositions];
@@ -139,15 +178,17 @@ const generateSpiralPosition = (
   index: number,
   offset: number = 0
 ): [number, number, number] => {
-  const CENTER_ROW = 2;
-  const CENTER_COL = 2;
-  const GRID_SIZE = 5;
 
   // Work experience positions (ring around center) - these should be excluded
   const workPositions = new Set([
-    "1,1", "1,2", "1,3", // Top row of ring
-    "2,1", "2,3", // Middle row (skip center)
-    "3,1", "3,2", "3,3", // Bottom row of ring
+    "1,1",
+    "1,2",
+    "1,3", // Top row of ring
+    "2,1",
+    "2,3", // Middle row (skip center)
+    "3,1",
+    "3,2",
+    "3,3", // Bottom row of ring
   ]);
 
   // True spiral pattern: start at top-left corner, go clockwise around the perimeter
@@ -156,14 +197,29 @@ const generateSpiralPosition = (
   const allSpiralPositions: Array<[number, number]> = [
     // Outer ring - clockwise spiral starting from top-left
     [0, 0], // Top-left corner
-    [0, 1], [0, 2], [0, 3], [0, 4], // Top edge
-    [1, 4], [2, 4], [3, 4], [4, 4], // Right edge
-    [4, 3], [4, 2], [4, 1], [4, 0], // Bottom edge
-    [3, 0], [2, 0], [1, 0], // Left edge (back to start)
+    [0, 1],
+    [0, 2],
+    [0, 3],
+    [0, 4], // Top edge
+    [1, 4],
+    [2, 4],
+    [3, 4],
+    [4, 4], // Right edge
+    [4, 3],
+    [4, 2],
+    [4, 1],
+    [4, 0], // Bottom edge
+    [3, 0],
+    [2, 0],
+    [1, 0], // Left edge (back to start)
     // Inner ring - clockwise spiral (excluding center and work positions)
-    [1, 1], [1, 2], [1, 3], // Top
-    [2, 3], [3, 3], // Right
-    [3, 2], [3, 1], // Bottom
+    [1, 1],
+    [1, 2],
+    [1, 3], // Top
+    [2, 3],
+    [3, 3], // Right
+    [3, 2],
+    [3, 1], // Bottom
     [2, 1], // Left (completing inner ring)
   ];
 
@@ -178,14 +234,11 @@ const generateSpiralPosition = (
 
 // Helper function to generate building positions for education and interests
 // Uses remaining positions after work and projects are placed
-const generateBuildingPosition = (
-  index: number,
-  total: number,
-  offset: number = 0
+const _generateBuildingPosition = (
+  _index: number,
+  _total: number,
+  _offset: number = 0
 ): [number, number, number] => {
-  const CENTER_ROW = 2;
-  const CENTER_COL = 2;
-  const GRID_SIZE = 5;
 
   // Get all positions excluding center park
   const allPositions: Array<[number, number]> = [];
@@ -199,6 +252,80 @@ const generateBuildingPosition = (
 
   const idx = (index + offset) % allPositions.length;
   const position = allPositions[idx];
+  return gridToWorldPosition(position[0], position[1]);
+};
+
+// Helper function to find the first available position for home
+// This matches the logic in Buildings.tsx where home is placed at first available spot
+const findHomePosition = (
+  occupiedPositions: Set<string>
+): [number, number] | null => {
+  const parkPositions = new Set(["2,2"]);
+
+  // Find first available position (same order as Buildings.tsx loop)
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      const gridKey = `${row},${col}`;
+      // Skip if occupied or is a park
+      if (occupiedPositions.has(gridKey) || parkPositions.has(gridKey)) {
+        continue;
+      }
+      return [row, col];
+    }
+  }
+  return null;
+};
+
+// Helper function to generate interest positions
+// Excludes positions occupied by work, education, projects, and home
+// Only uses available small building spots (low priority)
+const generateInterestPosition = (
+  index: number,
+  occupiedPositions: Set<string>
+): [number, number, number] => {
+  const CENTER_ROW = 2;
+  const CENTER_COL = 2;
+
+  // Reserve home position (first available spot)
+  const homePosition = findHomePosition(occupiedPositions);
+  const positionsWithHome = new Set(occupiedPositions);
+  if (homePosition) {
+    positionsWithHome.add(`${homePosition[0]},${homePosition[1]}`);
+  }
+
+  // Get all available positions (excluding center park, occupied positions, and home)
+  const availablePositions: Array<[number, number]> = [];
+  for (let row = 0; row < GRID_SIZE; row++) {
+    for (let col = 0; col < GRID_SIZE; col++) {
+      const positionKey = `${row},${col}`;
+      // Skip center park, occupied positions, and home position
+      if (
+        (row === CENTER_ROW && col === CENTER_COL) ||
+        positionsWithHome.has(positionKey)
+      ) {
+        continue;
+      }
+      availablePositions.push([row, col]);
+    }
+  }
+
+  // If no available positions, fallback to any non-center position (excluding home)
+  if (availablePositions.length === 0) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        const positionKey = `${row},${col}`;
+        if (
+          (row !== CENTER_ROW || col !== CENTER_COL) &&
+          !positionsWithHome.has(positionKey)
+        ) {
+          availablePositions.push([row, col]);
+        }
+      }
+    }
+  }
+
+  const idx = index % availablePositions.length;
+  const position = availablePositions[idx];
   return gridToWorldPosition(position[0], position[1]);
 };
 
@@ -303,13 +430,15 @@ const transformResumeData = (): ResumeData => {
       description: exp.description,
       technologies: exp.technologies || [],
       achievements: exp.achievements || [],
+      logo: exp.logo,
+      coverPhoto: exp.coverPhoto,
       buildingPosition: generateWorkPosition(index),
       buildingColor: generateColor(index, "work"),
     })
   );
 
-  // Transform education
-  const education: Education[] = resumeData.education.map((edu, index) => {
+  // Transform education - handle optional education field
+  const education: Education[] = (resumeData.education || []).map((edu, index) => {
     // Assign specific colors: first school = white/green, second = red
     let buildingColor: string;
     if (index === 0) {
@@ -332,10 +461,57 @@ const transformResumeData = (): ResumeData => {
       achievements: [],
       buildingPosition: generateSpiralPosition(
         index,
-        resumeData.projects.length // Continue spiral after personal projects
+        (resumeData.projects || []).length // Continue spiral after personal projects
       ),
       buildingColor: buildingColor,
     };
+  });
+
+  // Transform personal projects - place in spiral pattern
+  const personalProjects: PersonalProject[] = resumeData.projects.map(
+    (project, index) => ({
+      id: `project-${index + 1}`,
+      name: project.name,
+      description: project.description,
+      technologies: project.technologies || [],
+      githubUrl: project.githubUrl,
+      liveUrl: project.liveUrl,
+      image: project.image,
+      screenshots: project.screenshots || undefined,
+      featured: project.featured,
+      buildingPosition: generateSpiralPosition(index),
+      buildingColor: generateColor(index, "project"),
+    })
+  );
+
+  // Calculate occupied positions from work, education, and projects
+  const occupiedPositions = new Set<string>();
+
+  // Add work positions
+  resumeData.experience.forEach((_, index) => {
+    const position = generateWorkPosition(index);
+    const gridPos = worldToGridPosition(position);
+    if (gridPos) {
+      occupiedPositions.add(`${gridPos[0]},${gridPos[1]}`);
+    }
+  });
+
+  // Add education positions
+  (resumeData.education || []).forEach((_, index) => {
+    const position = generateSpiralPosition(index, (resumeData.projects || []).length);
+    const gridPos = worldToGridPosition(position);
+    if (gridPos) {
+      occupiedPositions.add(`${gridPos[0]},${gridPos[1]}`);
+    }
+  });
+
+  // Add project positions
+  resumeData.projects.forEach((_, index) => {
+    const position = generateSpiralPosition(index);
+    const gridPos = worldToGridPosition(position);
+    if (gridPos) {
+      occupiedPositions.add(`${gridPos[0]},${gridPos[1]}`);
+    }
   });
 
   // Transform interests - categorize them
@@ -361,35 +537,16 @@ const transformResumeData = (): ResumeData => {
     return "other";
   };
 
+  // Transform interests - all positioned in available small building spots
   const interests: Interest[] = resumeData.interests.map((interest, index) => ({
     id: `int-${index + 1}`,
     name: interest,
     category: categorizeInterest(interest),
     description: `Passionate about ${interest.toLowerCase()}.`,
     details: [],
-    buildingPosition: generateBuildingPosition(
-      index,
-      resumeData.interests.length,
-      resumeData.experience.length + resumeData.education.length
-    ),
+    buildingPosition: generateInterestPosition(index, occupiedPositions),
     buildingColor: generateColor(index, "interest"),
   }));
-
-  // Transform personal projects - place in spiral pattern
-  const personalProjects: PersonalProject[] = resumeData.projects.map(
-    (project, index) => ({
-      id: `project-${index + 1}`,
-      name: project.name,
-      description: project.description,
-      technologies: project.technologies || [],
-      githubUrl: project.githubUrl,
-      liveUrl: project.liveUrl,
-      image: project.image,
-      featured: project.featured,
-      buildingPosition: generateSpiralPosition(index),
-      buildingColor: generateColor(index, "project"),
-    })
-  );
 
   return {
     name: resumeData.personal.name,
@@ -409,7 +566,6 @@ const transformResumeData = (): ResumeData => {
   };
 };
 
-const defaultResume: ResumeData = transformResumeData();
 
 export type BuildingCategory = "work" | "education" | "interest" | "project";
 
@@ -422,8 +578,12 @@ interface ResumeContextType {
   resume: ResumeData;
   selectedBuilding: SelectedBuilding | null;
   setSelectedBuilding: (building: SelectedBuilding | null) => void;
-  updateResume: (data: Partial<ResumeData>) => void;
+  updateResume: () => void;
   zoomToBuilding?: (category: BuildingCategory, id: string) => void;
+  isLeftPanelVisible: boolean;
+  setIsLeftPanelVisible: (visible: boolean) => void;
+  isScreenshotModalOpen: boolean;
+  setIsScreenshotModalOpen: (open: boolean) => void;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -435,14 +595,17 @@ export const ResumeProvider = ({
   children: ReactNode;
   zoomToPosition?: (
     position: [number, number, number],
-    distance?: number
+    distance?: number,
+    targetHeight?: number
   ) => void;
 }) => {
   const resume = useMemo(() => transformResumeData(), []);
   const [selectedBuilding, setSelectedBuilding] =
     useState<SelectedBuilding | null>(null);
+  const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true);
+  const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
 
-  const updateResume = (data: Partial<ResumeData>) => {
+  const updateResume = () => {
     // Note: Since we're using static data from JSON, updates won't persist
     // This is kept for API compatibility
     console.warn(
@@ -454,23 +617,36 @@ export const ResumeProvider = ({
     if (!zoomToPosition) return;
 
     let buildingPosition: [number, number, number] | null = null;
+    let targetHeight: number | undefined = undefined;
 
     if (category === "work") {
       const exp = resume.experiences.find((e) => e.id === id);
-      if (exp) buildingPosition = exp.buildingPosition;
+      if (exp) {
+        buildingPosition = exp.buildingPosition;
+        // Work buildings are tall (24-30 units) with tooltips on top
+        // Set target height to middle/upper portion of building to show tooltip
+        targetHeight = 20; // Approximately middle of tall work buildings
+      }
     } else if (category === "education") {
       const edu = resume.education.find((e) => e.id === id);
       if (edu) buildingPosition = edu.buildingPosition;
     } else if (category === "interest") {
       const int = resume.interests.find((i) => i.id === id);
-      if (int) buildingPosition = int.buildingPosition;
+      if (int) {
+        // Basketball interest should zoom to center court (2,2)
+        if (int.name.toLowerCase() === "basketball") {
+          buildingPosition = gridToWorldPosition(2, 2);
+        } else {
+          buildingPosition = int.buildingPosition;
+        }
+      }
     } else if (category === "project") {
       const proj = resume.personalProjects.find((p) => p.id === id);
       if (proj) buildingPosition = proj.buildingPosition;
     }
 
     if (buildingPosition) {
-      zoomToPosition(buildingPosition, 100);
+      zoomToPosition(buildingPosition, 100, targetHeight);
     }
   };
 
@@ -482,6 +658,10 @@ export const ResumeProvider = ({
         setSelectedBuilding,
         updateResume,
         zoomToBuilding,
+        isLeftPanelVisible,
+        setIsLeftPanelVisible,
+        isScreenshotModalOpen,
+        setIsScreenshotModalOpen,
       }}
     >
       {children}

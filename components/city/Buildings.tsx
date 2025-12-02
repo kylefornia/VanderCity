@@ -1,9 +1,8 @@
-"use client";
-
 import * as THREE from "three";
 
 import { BLOCK_SIZE, GRID_SIZE, STREET_WIDTH } from "./cityConstants";
 import { EducationBuilding, WorkBuilding } from "./CustomBuildings";
+import { FaBasketballBall, FaLightbulb, FaPalette } from "react-icons/fa";
 import { FiX, FiMapPin, FiMail, FiPhone } from "react-icons/fi";
 import { HiOutlineCode } from "react-icons/hi";
 import { Html, useGLTF } from "@react-three/drei";
@@ -11,6 +10,7 @@ import { memo, useEffect, useMemo, useRef, useState, Suspense } from "react";
 
 import { useFrame } from "@react-three/fiber";
 import { useResume } from "@/context/ResumeContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // Helper function to ensure colors are excellent and vibrant
 const toPastel = (color: string): THREE.Color => {
@@ -196,7 +196,7 @@ const BuildingBlock = memo(
     const modelPath = SMALL_BUILDING_MODELS[modelIndex];
 
     const { scene } = useGLTF(modelPath);
-    
+
     // Use cached clone or create new one
     const clonedScene = useMemo(() => {
       const cacheKey = `building-block-${modelPath}`;
@@ -209,6 +209,16 @@ const BuildingBlock = memo(
       return modelCache.get(cacheKey)!.clone();
     }, [scene, modelPath]);
 
+    // Enable shadows on all meshes in the scene
+    useEffect(() => {
+      clonedScene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+    }, [clonedScene]);
+
     return (
       <group position={position} scale={scale}>
         <primitive object={clonedScene} />
@@ -217,6 +227,348 @@ const BuildingBlock = memo(
   }
 );
 
+// Interest Building Block - uses small building models with color support
+interface InterestBuildingBlockProps {
+  position: [number, number, number];
+  buildingId: string;
+  color: string;
+  scale?: number;
+}
+
+const InterestBuildingBlock = memo(
+  ({
+    position,
+    buildingId,
+    color,
+    scale = 4.5,
+  }: InterestBuildingBlockProps) => {
+    const {
+      setSelectedBuilding,
+      resume,
+      selectedBuilding,
+      isLeftPanelVisible,
+      isScreenshotModalOpen,
+    } = useResume();
+    const isMobile = useIsMobile();
+    const [isHovered, setIsHovered] = useState(false);
+    const [isFadingOut, setIsFadingOut] = useState(false);
+    const [tooltipOffset, setTooltipOffset] = useState<
+      [number, number, number]
+    >([0, 0, 0]);
+    const [boundingBox, setBoundingBox] = useState<{
+      width: number;
+      height: number;
+      depth: number;
+      center: THREE.Vector3;
+    } | null>(null);
+    const showTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const modelGroupRef = useRef<THREE.Group>(null);
+    const hitboxRef = useRef<THREE.Mesh>(null);
+
+    const interest = useMemo(
+      () => resume.interests.find((int) => int.id === buildingId),
+      [resume, buildingId]
+    );
+
+    const isSelected = useMemo(
+      () =>
+        selectedBuilding?.category === "interest" &&
+        selectedBuilding?.id === buildingId,
+      [selectedBuilding, buildingId]
+    );
+
+    const handleClick = () => {
+      setSelectedBuilding({ id: buildingId, category: "interest" });
+    };
+
+    // Show tooltip when selected from sidebar
+    useEffect(() => {
+      if (isSelected) {
+        // Clear any pending timeouts
+        if (showTimeoutRef.current) {
+          clearTimeout(showTimeoutRef.current);
+          showTimeoutRef.current = null;
+        }
+        if (fadeTimeoutRef.current) {
+          clearTimeout(fadeTimeoutRef.current);
+          fadeTimeoutRef.current = null;
+        }
+        setIsHovered(true);
+        setIsFadingOut(false);
+      } else {
+        // When deselected, immediately hide tooltip
+        setIsHovered(false);
+        setIsFadingOut(false);
+        // Clear any pending timeouts
+        if (showTimeoutRef.current) {
+          clearTimeout(showTimeoutRef.current);
+          showTimeoutRef.current = null;
+        }
+        if (fadeTimeoutRef.current) {
+          clearTimeout(fadeTimeoutRef.current);
+          fadeTimeoutRef.current = null;
+        }
+      }
+    }, [isSelected]);
+
+    const handleHover = (hovered: boolean) => {
+      // Clear any existing timeouts
+      if (showTimeoutRef.current) {
+        clearTimeout(showTimeoutRef.current);
+        showTimeoutRef.current = null;
+      }
+      if (fadeTimeoutRef.current) {
+        clearTimeout(fadeTimeoutRef.current);
+        fadeTimeoutRef.current = null;
+      }
+
+      if (hovered) {
+        setIsFadingOut(false);
+        showTimeoutRef.current = setTimeout(() => {
+          setIsHovered(true);
+          showTimeoutRef.current = null;
+        }, 150);
+      } else {
+        if (showTimeoutRef.current) {
+          clearTimeout(showTimeoutRef.current);
+          showTimeoutRef.current = null;
+          return;
+        }
+        setIsFadingOut(true);
+        fadeTimeoutRef.current = setTimeout(() => {
+          setIsHovered(false);
+          setIsFadingOut(false);
+          fadeTimeoutRef.current = null;
+        }, 200);
+      }
+    };
+
+    // Cleanup timeouts on unmount
+    useEffect(() => {
+      return () => {
+        if (showTimeoutRef.current) clearTimeout(showTimeoutRef.current);
+        if (fadeTimeoutRef.current) clearTimeout(fadeTimeoutRef.current);
+      };
+    }, []);
+
+    // Select model based on buildingId for consistency
+    const modelIndex = useMemo(() => {
+      const hash = buildingId
+        .split("")
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return hash % SMALL_BUILDING_MODELS.length;
+    }, [buildingId]);
+
+    const modelPath = SMALL_BUILDING_MODELS[modelIndex];
+    const { scene } = useGLTF(modelPath);
+
+    const clonedScene = useMemo(() => {
+      const cloned = scene.clone();
+
+      // Disable raycasting on all meshes so only hitbox receives clicks
+      cloned.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.raycast = () => {};
+        }
+      });
+
+      // Clone materials to ensure each building instance has unique materials
+      cloned.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material) {
+          if (Array.isArray(child.material)) {
+            child.material = child.material.map((mat) => mat.clone());
+          } else {
+            child.material = child.material.clone();
+          }
+        }
+      });
+
+      // Update materials to use interest colors
+      updateSceneMaterials(cloned, color, buildingId);
+      return cloned;
+    }, [scene, color, buildingId]);
+
+    // Enable shadows on all meshes in the scene
+    useEffect(() => {
+      clonedScene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+    }, [clonedScene]);
+
+    // Calculate bounding box from the actual model
+    useEffect(() => {
+      if (modelGroupRef.current) {
+        requestAnimationFrame(() => {
+          if (modelGroupRef.current) {
+            const box = new THREE.Box3();
+            box.setFromObject(modelGroupRef.current);
+
+            if (!box.isEmpty()) {
+              const size = box.getSize(new THREE.Vector3());
+              const center = box.getCenter(new THREE.Vector3());
+              setBoundingBox({
+                width: size.x,
+                height: size.y,
+                depth: size.z,
+                center: center.clone(),
+              });
+            }
+          }
+        });
+      }
+    }, [clonedScene, scale]);
+
+    // Use bounding box dimensions for hitbox, fallback to estimated if not available
+    const hitboxWidth = boundingBox?.width || scale * 1.2;
+    const hitboxHeight = boundingBox?.height || scale * 1.5;
+    const hitboxDepth = boundingBox?.depth || scale * 1.2;
+    const hitboxCenterY = boundingBox?.center.y || hitboxHeight / 2;
+
+    return (
+      <group position={position}>
+        {/* Transparent hitbox to catch pointer events */}
+        <mesh
+          ref={hitboxRef}
+          position={[0, hitboxCenterY, 0]}
+          userData={{ buildingId, category: "interest" }}
+          renderOrder={1000}
+          onPointerEnter={(e) => {
+            e.stopPropagation();
+            handleHover(true);
+            document.body.style.cursor = "pointer";
+          }}
+          onPointerMove={(e) => {
+            e.stopPropagation();
+            handleHover(true);
+            if (e.intersections && e.intersections.length > 0) {
+              const intersection = e.intersections[0];
+              const localPoint = intersection.point.clone();
+              const meshWorldPos = new THREE.Vector3();
+              e.object.getWorldPosition(meshWorldPos);
+              localPoint.sub(meshWorldPos);
+              const offsetX = Math.max(-2, Math.min(2, localPoint.x * 0.2));
+              const offsetY = Math.max(
+                -1,
+                Math.min(1, (localPoint.y - hitboxCenterY) * 0.15)
+              );
+              const offsetZ = Math.max(-2, Math.min(2, localPoint.z * 0.2));
+              setTooltipOffset([offsetX, offsetY, offsetZ]);
+            }
+          }}
+          onPointerLeave={(e) => {
+            e.stopPropagation();
+            handleHover(false);
+            document.body.style.cursor = "default";
+            setTooltipOffset([0, 0, 0]);
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleClick();
+          }}
+        >
+          <boxGeometry args={[hitboxWidth, hitboxHeight, hitboxDepth]} />
+          <meshBasicMaterial
+            transparent
+            opacity={0}
+            side={THREE.DoubleSide}
+            visible={true}
+          />
+        </mesh>
+
+        {/* The actual building model */}
+        <group ref={modelGroupRef} scale={scale}>
+          <primitive object={clonedScene} />
+        </group>
+
+        {/* Tooltip */}
+        {(isHovered || isSelected) &&
+          interest &&
+          !(isMobile && isLeftPanelVisible) &&
+          !isScreenshotModalOpen && (
+            <Html
+              position={[
+                tooltipOffset[0],
+                (boundingBox
+                  ? boundingBox.center.y + boundingBox.height / 2
+                  : hitboxHeight) +
+                  2 +
+                  tooltipOffset[1],
+                tooltipOffset[2],
+              ]}
+              center
+              style={{ pointerEvents: "auto" }}
+              occlude={false}
+            >
+              <div
+                className={`bg-white text-gray-900 px-5 py-4 rounded-xl shadow-xl border border-gray-200 min-w-[320px] max-w-[380px] relative ${
+                  isFadingOut ? "animate-fade-out" : "animate-bounce-in-up"
+                }`}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsHovered(false);
+                    if (isSelected) {
+                      setSelectedBuilding(null);
+                    }
+                  }}
+                  className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-700 transition-colors p-1.5 rounded-lg hover:bg-gray-100/80"
+                  aria-label="Close tooltip"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <div className="p-1.5 rounded-lg bg-gray-50 border border-gray-200/50">
+                        {interest.category === "sports" ? (
+                          <FaBasketballBall className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                        ) : interest.category === "hobby" ? (
+                          <FaPalette className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                        ) : (
+                          <FaLightbulb className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                        )}
+                      </div>
+                      <div className="text-lg font-semibold text-gray-900 leading-tight">
+                        {interest.name}
+                      </div>
+                    </div>
+                    <div
+                      className={`text-xs font-medium px-2 py-0.5 rounded-md inline-block mt-1.5 ml-11 ${
+                        interest.category === "sports"
+                          ? "bg-red-50 text-red-700 border border-red-100"
+                          : interest.category === "hobby"
+                          ? "bg-teal-50 text-teal-700 border border-teal-100"
+                          : "bg-gray-50 text-gray-700 border border-gray-100"
+                      }`}
+                    >
+                      {interest.category === "sports"
+                        ? "Sports"
+                        : interest.category === "hobby"
+                        ? "Hobby"
+                        : "Interest"}
+                    </div>
+                  </div>
+                  {interest.description && (
+                    <div className="text-xs text-gray-600 leading-relaxed pt-1.5 border-t border-gray-100">
+                      {interest.description}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Html>
+          )}
+      </group>
+    );
+  }
+);
+
+InterestBuildingBlock.displayName = "InterestBuildingBlock";
+
 // Generic building component using GLB models (kept for backward compatibility)
 interface GenericBuildingProps {
   position: [number, number, number];
@@ -224,7 +576,7 @@ interface GenericBuildingProps {
   scale?: number;
 }
 
-const GenericBuilding = ({
+const _GenericBuilding = ({
   position,
   modelIndex,
   scale = 1,
@@ -237,6 +589,16 @@ const GenericBuilding = ({
 
   const { scene } = useGLTF(buildingModels[modelIndex]);
   const clonedScene = useMemo(() => scene.clone(), [scene]);
+
+  // Enable shadows on all meshes in the scene
+  useEffect(() => {
+    clonedScene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+  }, [clonedScene]);
 
   return (
     <group position={position} scale={scale}>
@@ -251,7 +613,7 @@ interface HouseBuildingProps {
 }
 
 const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
-  const { resume } = useResume();
+  const { resume, isScreenshotModalOpen } = useResume();
   const [isHovered, setIsHovered] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [tooltipOffset, setTooltipOffset] = useState<[number, number, number]>([
@@ -319,11 +681,11 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
   }, []);
 
   const { scene } = useGLTF("/models/House.glb");
-  
+
   // Scale the house model to fit nicely in the grid cell - larger scale to match other buildings
   // Use a scale similar to BuildingBlock (which uses 4.5-7.5)
   const houseScale = 8.0;
-  
+
   // Calculate ground offset to place house on ground (similar to Trees component)
   const groundOffset = useMemo(() => {
     const box = new THREE.Box3();
@@ -331,7 +693,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
     // Return the offset needed to move the bottom of the model to Y=0
     return -box.min.y;
   }, [scene]);
-  
+
   // Use cached clone or create new one
   const clonedScene = useMemo(() => {
     const cacheKey = "house-model";
@@ -343,7 +705,17 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
     // Clone from cache to avoid sharing geometry/material references
     return modelCache.get(cacheKey)!.clone();
   }, [scene]);
-  
+
+  // Enable shadows on house model
+  useEffect(() => {
+    clonedScene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+  }, [clonedScene]);
+
   // Calculate bounding box from the actual model after it's loaded and scaled
   useEffect(() => {
     if (modelGroupRef.current) {
@@ -373,7 +745,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
   const hitboxHeight = boundingBox?.height || 15;
   const hitboxDepth = boundingBox?.depth || 18;
   // Adjust hitbox center Y to account for ground offset
-  const hitboxCenterY = boundingBox 
+  const hitboxCenterY = boundingBox
     ? boundingBox.center.y + groundOffset * houseScale
     : 7.5 + groundOffset * houseScale;
 
@@ -426,8 +798,8 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
       </mesh>
 
       {/* The actual house model - offset upward so it sits on the ground */}
-      <group 
-        ref={modelGroupRef} 
+      <group
+        ref={modelGroupRef}
         scale={houseScale}
         position={[0, groundOffset * houseScale, 0]}
       >
@@ -470,7 +842,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
       )}
 
       {/* Simple Profile Card Tooltip */}
-      {isHovered && (
+      {isHovered && !isScreenshotModalOpen && (
         <Html
           position={[
             tooltipOffset[0],
@@ -513,7 +885,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
             >
               <FiX className="w-4 h-4" />
             </button>
-            
+
             <div className="space-y-3">
               {/* Profile Picture */}
               <div className="flex justify-center">
@@ -525,10 +897,11 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
                     onError={(e) => {
                       // Fallback to initials if image fails to load
                       const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
+                      target.style.display = "none";
                       const parent = target.parentElement;
                       if (parent) {
-                        parent.className = 'w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-sm';
+                        parent.className =
+                          "w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold shadow-sm";
                         parent.textContent = resume.name
                           .split(" ")
                           .map((n) => n[0])
@@ -539,7 +912,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
                   />
                 </div>
               </div>
-              
+
               {/* Profile Info */}
               <div className="text-center">
                 <div className="text-lg font-semibold text-gray-900 leading-tight">
@@ -549,7 +922,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
                   {resume.title}
                 </div>
               </div>
-              
+
               {/* Location */}
               {resume.location && (
                 <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500 pt-1.5 border-t border-gray-100">
@@ -557,7 +930,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
                   <span>{resume.location}</span>
                 </div>
               )}
-              
+
               {/* Introduction */}
               {resume.summary && (
                 <div className="pt-1.5 border-t border-gray-100">
@@ -565,13 +938,11 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
                     <span className="font-medium text-gray-900">
                       Hi, I'm {resume.name.split(" ")[0]}! 👋
                     </span>{" "}
-                    <span>
-                      {resume.summary.split(".")[0]}.
-                    </span>
+                    <span>{resume.summary.split(".")[0]}.</span>
                   </div>
                 </div>
               )}
-              
+
               {/* Contact Info */}
               <div className="space-y-2 pt-1.5 border-t border-gray-100">
                 {resume.email && (
@@ -612,7 +983,14 @@ interface ProjectBuildingProps {
 
 const ProjectBuilding = memo(
   ({ position, buildingId, color }: ProjectBuildingProps) => {
-    const { setSelectedBuilding, resume, selectedBuilding } = useResume();
+    const {
+      setSelectedBuilding,
+      resume,
+      selectedBuilding,
+      isLeftPanelVisible,
+      isScreenshotModalOpen,
+    } = useResume();
+    const isMobile = useIsMobile();
     const [isHovered, setIsHovered] = useState(false);
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [tooltipOffset, setTooltipOffset] = useState<
@@ -644,7 +1022,6 @@ const ProjectBuilding = memo(
     // Check if any building is selected (for translucency effect)
     // Selected buildings should NEVER be translucent
     const hasSelection = selectedBuilding !== null;
-    const shouldBeTranslucent = hasSelection && !isSelected;
 
     const buildingScale = useMemo(() => {
       const hash = buildingId
@@ -749,7 +1126,7 @@ const ProjectBuilding = memo(
     const { scene } = useGLTF(buildingModels[lowBuildingModelIndex]);
     const clonedScene = useMemo(() => {
       const cloned = scene.clone();
-      
+
       // Clone materials to ensure each building instance has unique materials
       // This prevents materials from being shared between building instances
       cloned.traverse((child) => {
@@ -763,22 +1140,33 @@ const ProjectBuilding = memo(
           }
         }
       });
-      
+
       // Update materials to use pastel colors
       updateSceneMaterials(cloned, color, buildingId);
       return cloned;
     }, [scene, color, buildingId]);
 
+    // Enable shadows on project building model
+    useEffect(() => {
+      clonedScene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+    }, [clonedScene]);
+
     // Update material translucency when selection changes - use useEffect for performance
     useEffect(() => {
       if (!clonedScene) return;
-      
+
       const currentIsSelected =
         selectedBuilding?.category === "project" &&
         selectedBuilding?.id === buildingId;
       const currentHasSelection = selectedBuilding !== null;
-      const currentShouldBeTranslucent = currentHasSelection && !currentIsSelected;
-      
+      const currentShouldBeTranslucent =
+        currentHasSelection && !currentIsSelected;
+
       const targetOpacity = currentShouldBeTranslucent ? 0.3 : 1.0;
       const targetTransparent = currentShouldBeTranslucent;
       const targetDepthWrite = !currentShouldBeTranslucent;
@@ -789,7 +1177,7 @@ const ProjectBuilding = memo(
       // Use higher polygonOffset values to prevent z-fighting at base
       const targetPolygonOffsetFactor = currentShouldBeTranslucent ? 4 : 0;
       const targetPolygonOffsetUnits = currentShouldBeTranslucent ? 4 : 0;
-      
+
       clonedScene.traverse((child) => {
         if (child instanceof THREE.Mesh && child.material) {
           const materials = Array.isArray(child.material)
@@ -912,62 +1300,65 @@ const ProjectBuilding = memo(
         </group>
 
         {/* Tooltip */}
-        {(isHovered || isSelected) && project && (
-          <Html
-            position={[
-              tooltipOffset[0],
-              (boundingBox
-                ? boundingBox.center.y + boundingBox.height / 2
-                : estimatedHeight) +
-                2 +
-                tooltipOffset[1],
-              tooltipOffset[2],
-            ]}
-            center
-            style={{ pointerEvents: "auto" }}
-            occlude={false}
-          >
-            <div
-              className={`bg-white text-gray-900 px-5 py-4 rounded-xl shadow-xl border border-gray-200 min-w-[300px] max-w-[360px] relative ${
-                isFadingOut ? "animate-fade-out" : "animate-bounce-in-up"
-              }`}
+        {(isHovered || isSelected) &&
+          project &&
+          !(isMobile && isLeftPanelVisible) &&
+          !isScreenshotModalOpen && (
+            <Html
+              position={[
+                tooltipOffset[0],
+                (boundingBox
+                  ? boundingBox.center.y + boundingBox.height / 2
+                  : estimatedHeight) +
+                  2 +
+                  tooltipOffset[1],
+                tooltipOffset[2],
+              ]}
+              center
+              style={{ pointerEvents: "auto" }}
+              occlude={false}
             >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsHovered(false);
-                  if (isSelected) {
-                    setSelectedBuilding(null);
-                  }
-                }}
-                className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-700 transition-colors p-1.5 rounded-lg hover:bg-gray-100/80"
-                aria-label="Close tooltip"
+              <div
+                className={`bg-white text-gray-900 px-5 py-4 rounded-xl shadow-xl border border-gray-200 min-w-[300px] max-w-[360px] relative ${
+                  isFadingOut ? "animate-fade-out" : "animate-bounce-in-up"
+                }`}
               >
-                <FiX className="w-4 h-4" />
-              </button>
-              <div className="space-y-3">
-                <div>
-                  <div className="flex items-center gap-2.5 mb-1.5">
-                    <div className="p-1.5 rounded-lg bg-gray-50 border border-gray-200/50">
-                      <HiOutlineCode className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsHovered(false);
+                    if (isSelected) {
+                      setSelectedBuilding(null);
+                    }
+                  }}
+                  className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-700 transition-colors p-1.5 rounded-lg hover:bg-gray-100/80"
+                  aria-label="Close tooltip"
+                >
+                  <FiX className="w-4 h-4" />
+                </button>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <div className="p-1.5 rounded-lg bg-gray-50 border border-gray-200/50">
+                        <HiOutlineCode className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                      </div>
+                      <div className="text-lg font-semibold text-gray-900 leading-tight">
+                        {project.name}
+                      </div>
                     </div>
-                    <div className="text-lg font-semibold text-gray-900 leading-tight">
-                      {project.name}
+                    <div className="text-xs font-medium px-2 py-0.5 rounded-md inline-block mt-1.5 ml-11 bg-purple-50 text-purple-700 border border-purple-100">
+                      Personal Project
                     </div>
                   </div>
-                  <div className="text-xs font-medium px-2 py-0.5 rounded-md inline-block mt-1.5 ml-11 bg-purple-50 text-purple-700 border border-purple-100">
-                    Personal Project
-                  </div>
+                  {project.description && (
+                    <div className="text-xs text-gray-600 leading-relaxed pt-1.5 border-t border-gray-100">
+                      {project.description}
+                    </div>
+                  )}
                 </div>
-                {project.description && (
-                  <div className="text-xs text-gray-600 leading-relaxed pt-1.5 border-t border-gray-100">
-                    {project.description}
-                  </div>
-                )}
               </div>
-            </div>
-          </Html>
-        )}
+            </Html>
+          )}
       </group>
     );
   }
@@ -1201,22 +1592,16 @@ const InstancedWindows = ({
   );
 };
 
-const Building = ({
+const _Building = ({
   position,
   width,
   depth,
   height,
   color,
   isResumeBuilding = false,
-  buildingId,
   buildingType = "modern",
 }: BuildingProps) => {
   const seed = useMemo(() => Math.random() * 1000, []);
-
-  // Regular buildings are not clickable
-  const handleClick = () => {
-    // Regular buildings don't have interactive features
-  };
 
   // Material variations for realism with pastel colors
   const materials = useMemo(() => {
@@ -1267,14 +1652,18 @@ const Building = ({
     <group position={position}>
       {/* Base floor - darker, more detailed */}
       {hasBaseFloor && (
-        <mesh position={[0, 1.5, 0]}>
+        <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
           <boxGeometry args={[width, 3, depth]} />
           <primitive object={materials.base} attach="material" />
         </mesh>
       )}
 
       {/* Main building body */}
-      <mesh position={[0, hasBaseFloor ? 3 + (height - 3) / 2 : height / 2, 0]}>
+      <mesh
+        position={[0, hasBaseFloor ? 3 + (height - 3) / 2 : height / 2, 0]}
+        castShadow
+        receiveShadow
+      >
         <boxGeometry args={[width, height - (hasBaseFloor ? 3 : 0), depth]} />
         <primitive object={materials.main} attach="material" />
       </mesh>
@@ -1290,7 +1679,8 @@ const Building = ({
             <mesh
               key={`ledge-${i}`}
               position={[0, ledgeY, 0]}
-              castShadow={false}
+              castShadow
+              receiveShadow
             >
               <boxGeometry args={[width + 0.15, 0.2, depth + 0.15]} />
               <primitive object={materials.ledge} attach="material" />
@@ -1308,14 +1698,14 @@ const Building = ({
       />
 
       {/* Roof details - positioned correctly on top of building */}
-      <mesh position={[0, height + 0.2, 0]} castShadow={false}>
+      <mesh position={[0, height + 0.2, 0]} castShadow receiveShadow>
         <boxGeometry args={[width + 0.3, 0.4, depth + 0.3]} />
         <primitive object={materials.roof} attach="material" />
       </mesh>
 
       {/* Roof accent (for taller buildings) */}
       {height > 15 && (
-        <mesh position={[0, height + 0.4, 0]} castShadow={false}>
+        <mesh position={[0, height + 0.4, 0]} castShadow receiveShadow>
           <boxGeometry args={[width + 0.5, 0.2, depth + 0.5]} />
           <primitive object={materials.accent} attach="material" />
         </mesh>
@@ -1355,7 +1745,7 @@ const Buildings = () => {
     const snapToGrid = (
       position: [number, number, number]
     ): [number, number, number] => {
-      const [x, y, z] = position;
+      const [x, , z] = position;
       const col = Math.round(
         (x - startPos - STREET_WIDTH - BLOCK_SIZE / 2) /
           (BLOCK_SIZE + STREET_WIDTH)
@@ -1468,10 +1858,51 @@ const Buildings = () => {
       }
     });
 
+    // Render interest buildings using small building models
+    // Skip basketball interest since it's represented by the center court
+    resume.interests.forEach((interest) => {
+      // Skip basketball - it's represented by the center court
+      if (interest.name.toLowerCase() === "basketball") {
+        return;
+      }
+
+      const [x, y, z] = snapToGrid(interest.buildingPosition);
+      // Calculate scale based on interest ID for variety (similar to BuildingBlock)
+      const hash = interest.id
+        .split("")
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const baseScale = 4.5 + (hash % 20) * 0.15; // Same scale range as BuildingBlock
+
+      buildingElements.push(
+        <Suspense key={`suspense-interest-${interest.id}`} fallback={null}>
+          <InterestBuildingBlock
+            key={`interest-${interest.id}`}
+            position={[x, y, z]}
+            buildingId={interest.id}
+            color={interest.buildingColor}
+            scale={baseScale}
+          />
+        </Suspense>
+      );
+      buildingIndex++;
+      // Mark nearby grid cells as occupied (col, row format)
+      const col = Math.round(
+        (x - startPos - STREET_WIDTH - BLOCK_SIZE / 2) /
+          (BLOCK_SIZE + STREET_WIDTH)
+      );
+      const row = Math.round(
+        (z - startPos - STREET_WIDTH - BLOCK_SIZE / 2) /
+          (BLOCK_SIZE + STREET_WIDTH)
+      );
+      if (col >= 0 && col < GRID_SIZE && row >= 0 && row < GRID_SIZE) {
+        occupiedGridCells.add(`${row},${col}`);
+      }
+    });
+
     // Add building blocks using Low Buildings and Skyscrapers in empty grid cells
     // Use House.glb for one specific grid tile - replace the first available BuildingBlock
     let housePlaced = false;
-    
+
     for (let row = 0; row < GRID_SIZE; row++) {
       for (let col = 0; col < GRID_SIZE; col++) {
         const gridKey = `${row},${col}`;
@@ -1487,10 +1918,7 @@ const Buildings = () => {
         if (!housePlaced) {
           buildingElements.push(
             <Suspense key={`suspense-house-${row}-${col}`} fallback={null}>
-              <HouseBuilding
-                key={`house-${row}-${col}`}
-                position={position}
-              />
+              <HouseBuilding key={`house-${row}-${col}`} position={position} />
             </Suspense>
           );
           housePlaced = true;

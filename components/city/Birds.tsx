@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
@@ -29,7 +27,6 @@ const Birds = () => {
   const birds = useMemo(() => {
     const birdInstances: BirdInstance[] = [];
     const totalSize = GRID_SIZE * BLOCK_SIZE + (GRID_SIZE + 1) * STREET_WIDTH;
-    const startPos = -totalSize / 2;
     const groundBound = 80;
     const numFlocks = 1; // Number of flocks - just 1 group
     const birdsPerFlock = 3; // Birds per flock

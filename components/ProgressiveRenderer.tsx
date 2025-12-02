@@ -1,5 +1,3 @@
-"use client";
-
 import { Suspense, useState, useEffect, ReactNode, memo } from "react";
 
 interface ProgressiveRendererProps {

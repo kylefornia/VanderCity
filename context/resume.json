@@ -44,7 +44,9 @@
         "Implemented customer-facing features like quote PDF generation, email handling, attachments management, and online file previews.",
         "Collaborated directly with users and management to define requirements and deliver full-stack solutions that met business needs.",
         "Participated in weekly on-call rotations, resolving live production issues and ensuring system stability."
-      ]
+      ],
+      "logo": "/images/companies/summit-interconnect.webp",
+      "coverPhoto": "/images/companies/summit-interconnect-cover.jpg"
     },
     {
       "title": "React Native Engineer",
@@ -67,7 +69,9 @@
         "Implemented barcode scanning to automatically identify and cross off grocery items.",
         "Created a real-time list synchronization feature for shared access among multiple users.",
         "Enhanced performance with optimized rendering and state management for seamless updates."
-      ]
+      ],
+      "logo": "/images/companies/simplistic-logo.png",
+      "coverPhoto": "/images/companies/simplistic-cover.png"
     },
     {
       "title": "Front End Engineer",
@@ -95,12 +99,14 @@
         "Added multi-aspect ratio support for better video layout flexibility.",
         "Created user role systems such as Director and Presenter to manage permissions and broadcast flow.",
         "Refactored and cleaned thousands of lines of legacy code to reduce technical debt and improve maintainability."
-      ]
+      ],
+      "logo": "/images/companies/socialive-logo.png",
+      "coverPhoto": "/images/companies/socialive-cover.jpg"
     },
     {
       "title": "Owner",
-      "company": "iPhoneAux / BeamPet / FlexiDrill",
-      "location": "Remote",
+      "company": "iPhoneAux",
+      "location": "Anaheim, CA",
       "startDate": "Nov 2019",
       "endDate": "Dec 2020",
       "current": false,
@@ -118,7 +124,9 @@
         "Produced video advertisements and product showcases to increase engagement and conversion rates.",
         "Optimized online stores for performance and SEO to improve visibility and retention.",
         "Scaled operations to over 5,000 successful sales and worldwide shipments."
-      ]
+      ],
+      "logo": "/images/companies/shopify-logo.png",
+      "coverPhoto": "/images/companies/shopify-cover.webp"
     },
     {
       "title": "Front End / Full Stack Developer",
@@ -153,12 +161,14 @@
         "Implemented ArcGIS map visualizations with dynamic, real-time data integration.",
         "Created a Trello-like workflow management feature with drag-and-drop interactions.",
         "Built full-stack modules including invoicing, point of sale, user management, and workflow automation."
-      ]
+      ],
+      "logo": "/images/companies/anami-logo.png",
+      "coverPhoto": "/images/companies/anami-cover.svg"
     },
     {
-      "title": "Front End Developer",
+      "title": "Full Stack Developer",
       "company": "TextTrade",
-      "location": "Remote",
+      "location": "Irvine, CA",
       "startDate": "Oct 2017",
       "endDate": "Jan 2018",
       "current": false,
@@ -175,7 +185,9 @@
         "Built a book cover recognition system that auto-filled book details from uploaded photos.",
         "Added SMS notification functionality to alert users of updates and messages.",
         "Deployed the application using Heroku and optimized backend performance with MongoDB."
-      ]
+      ],
+      "logo": "/images/companies/texttrade-logo.png",
+      "coverPhoto": "/images/companies/texttrade-cover.png"
     },
     {
       "title": "Full Stack Developer",
@@ -197,7 +209,9 @@
         "Adopted an offline-first architecture to ensure usability without a stable internet connection.",
         "Added a bookmarking feature for reading articles later.",
         "Integrated live video and radio streaming that functioned even when the app was minimized or the screen was off."
-      ]
+      ],
+      "logo": "/images/companies/dzrh-logo.png",
+      "coverPhoto": "/images/companies/dzrh-cover.jpg"
     },
     {
       "title": "Full Stack Developer / Organizer / Lead Designer",
@@ -219,35 +233,9 @@
         "Designed the organization’s overall branding and visual identity.",
         "Reviewed and assessed participant code submissions for technical and functional quality.",
         "Mentored hackathon finalists to help them secure post-event funding and support."
-      ]
-    }
-  ],
-  "education": [
-    {
-      "degree": "BS - Information Systems",
-      "institution": "De La Salle-College of St. Benilde",
-      "location": "Philippines",
-      "graduationDate": "2016",
-      "gpa": "",
-      "relevantCoursework": [
-        "Information Systems",
-        "Software Development",
-        "Database Management",
-        "System Analysis"
-      ]
-    },
-    {
-      "degree": "BS - Mechanical Engineering",
-      "institution": "Mapua Institute of Technology",
-      "location": "Philippines",
-      "graduationDate": "2013",
-      "gpa": "",
-      "relevantCoursework": [
-        "Engineering Principles",
-        "Problem Solving",
-        "Technical Analysis",
-        "Project Management"
-      ]
+      ],
+      "logo": "/images/companies/hacktheclimate-logo.jpg",
+      "coverPhoto": "/images/companies/hacktheclimate-cover.jpg"
     }
   ],
   "skills": {
@@ -400,6 +388,67 @@
   },
   "projects": [
     {
+      "name": "MedHat AI",
+      "description": "An offline and privacy-first medical assistant and scheduling software. Verify prescriptions and provide personalized medical advice using AI.",
+      "technologies": [
+        "React",
+        "Tailwind CSS",
+        "Node.js",
+        "Electron",
+        "Firebase",
+        "MedGemma"
+      ],
+      "githubUrl": "",
+      "liveUrl": "",
+      "image": "/images/projects/brahim-1.jpg",
+      "featured": true,
+      "screenshots": [
+        "/images/projects/brahim-1.png",
+        "/images/projects/brahim-2.png",
+        "/images/projects/brahim-3.png"
+      ]
+    },
+    {
+      "name": "Thank You For Your Service",
+      "description": "Platform to send thank you notes to frontliners who served during COVID-19 pandemic. Progressive web app with offline persistence and caching. Includes geotagging of messages being sent worldwide.",
+      "technologies": [
+        "React JS",
+        "Node.js",
+        "Firebase",
+        "Three.js",
+        "Progressive Web App"
+      ],
+      "githubUrl": "https://github.com/kylefornia/tyfy.services",
+      "liveUrl": "https://tyfy.services",
+      "image": "/images/projects/tyfy.jpg",
+      "featured": true,
+      "screenshots": [
+        "/images/projects/tyfy-1.png",
+        "/images/projects/tyfy-2.png",
+        "/images/projects/tyfy-3.png"
+      ]
+    },
+    {
+      "name": "Mirada",
+      "description": "Mirada is a chrome extension that replaces your 'New Tab' page into a customizable desktop experience. Includes a variety of tools built with React JS with full desktop-like experience supporting unlimited open windows.",
+      "technologies": [
+        "React JS",
+        "Chrome Extension",
+        "Code Splitting",
+        "Performance Optimization"
+      ],
+      "githubUrl": "",
+      "liveUrl": "https://mirada.netlify.app",
+      "chromeUrl": "https://chrome.google.com/webstore/detail/mirada/jpdpnkbbkfhaellbghfmkjlokediemfm",
+      "image": "/images/projects/mirada.jpg",
+      "featured": true,
+      "screenshots": [
+        "/images/projects/mirada-1.png",
+        "/images/projects/mirada-2.png",
+        "/images/projects/mirada-3.png"
+      ]
+    },
+    {
       "name": "PetLog 🐶",
       "description": "A cross-platform mobile app to assist pet owners in managing their pets. Features social feed, reminders for appointments, and health tracking with walk and food tracking capabilities.",
       "technologies": [
@@ -447,21 +496,6 @@
       "featured": true
     },
     {
-      "name": "Mirada (Chrome Extension)",
-      "description": "Mirada is a chrome extension that replaces your 'New Tab' page into a customizable desktop experience. Includes a variety of tools built with React JS with full desktop-like experience supporting unlimited open windows.",
-      "technologies": [
-        "React JS",
-        "Chrome Extension",
-        "Code Splitting",
-        "Performance Optimization"
-      ],
-      "githubUrl": "",
-      "liveUrl": "https://mirada.netlify.app",
-      "chromeUrl": "https://chrome.google.com/webstore/detail/mirada/jpdpnkbbkfhaellbghfmkjlokediemfm",
-      "image": "/images/projects/mirada.jpg",
-      "featured": true
-    },
-    {
       "name": "NYOUS.LIVE",
       "description": "NYOUS.LIVE is an AI-powered autonomous news network. Leverages modern AI tech to generate content such as articles and videos based on real events with valid sources.",
       "technologies": [
@@ -492,21 +526,6 @@
       "liveUrl": "castcoinapp.web.app",
       "image": "/images/projects/nftflex.jpg",
       "featured": false
-    },
-    {
-      "name": "Thank You For Your Service",
-      "description": "Platform to send thank you notes to frontliners who served during COVID-19 pandemic. Progressive web app with offline persistence and caching. Includes geotagging of messages being sent worldwide.",
-      "technologies": [
-        "React JS",
-        "Node.js",
-        "Firebase",
-        "Three.js",
-        "Progressive Web App"
-      ],
-      "githubUrl": "https://github.com/kylefornia/tyfy.services",
-      "liveUrl": "https://tyfy.services",
-      "image": "/images/projects/tyfy.jpg",
-      "featured": true
     }
   ],
   "awards": [

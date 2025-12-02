@@ -1,5 +1,3 @@
-"use client";
-
 import * as THREE from "three";
 
 import { BLOCK_SIZE, GRID_SIZE, STREET_WIDTH } from "./cityConstants";
@@ -26,14 +24,6 @@ const sidewalkMaterial = new THREE.MeshStandardMaterial({
   depthWrite: true,
 });
 
-const markingMaterial = new THREE.MeshStandardMaterial({
-  color: "#ffeb3b",
-  emissive: "#ffeb3b",
-  emissiveIntensity: 0.2,
-  flatShading: true,
-  side: THREE.DoubleSide,
-  depthWrite: true,
-});
 
 const whiteStripeMaterial = new THREE.MeshStandardMaterial({
   color: "#ffffff",
@@ -260,9 +250,6 @@ const StreetGrid = () => {
                stripeEndZ >= intersection.z - tolerance;
       });
     };
-
-    // No longer using yellow markings - removed
-    const matrices: THREE.Matrix4[] = [];
 
     // Collect white stripe positions for center lane markings (dashed lines)
     // Separate arrays for horizontal and vertical roads with different orientations

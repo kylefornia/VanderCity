@@ -1,5 +1,3 @@
-"use client";
-
 import * as THREE from "three";
 
 import { BLOCK_SIZE, GRID_SIZE, STREET_WIDTH } from "./cityConstants";
@@ -73,7 +71,7 @@ const Clouds = () => {
   }, []);
 
   // Animate clouds drifting
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (cloudGroupRef.current) {
       const totalSize = GRID_SIZE * BLOCK_SIZE + (GRID_SIZE + 1) * STREET_WIDTH;
       const gridBound = totalSize / 2;

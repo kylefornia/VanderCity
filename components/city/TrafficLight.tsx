@@ -21,21 +21,25 @@ const TrafficLight = ({ position, rotation = 0 }: TrafficLightProps) => {
 
     // Traffic light cycle: red (0-0.4), yellow (0.4-0.5), green (0.5-1.0)
     if (redLightRef.current && yellowLightRef.current && greenLightRef.current) {
+      const redMaterial = redLightRef.current.material as THREE.MeshStandardMaterial;
+      const yellowMaterial = yellowLightRef.current.material as THREE.MeshStandardMaterial;
+      const greenMaterial = greenLightRef.current.material as THREE.MeshStandardMaterial;
+      
       if (cycle < 0.4) {
         // Red
-        redLightRef.current.material.emissive.setHex(0xff0000)
-        yellowLightRef.current.material.emissive.setHex(0x000000)
-        greenLightRef.current.material.emissive.setHex(0x000000)
+        redMaterial.emissive.setHex(0xff0000)
+        yellowMaterial.emissive.setHex(0x000000)
+        greenMaterial.emissive.setHex(0x000000)
       } else if (cycle < 0.5) {
         // Yellow
-        redLightRef.current.material.emissive.setHex(0x000000)
-        yellowLightRef.current.material.emissive.setHex(0xffff00)
-        greenLightRef.current.material.emissive.setHex(0x000000)
+        redMaterial.emissive.setHex(0x000000)
+        yellowMaterial.emissive.setHex(0xffff00)
+        greenMaterial.emissive.setHex(0x000000)
       } else {
         // Green
-        redLightRef.current.material.emissive.setHex(0x000000)
-        yellowLightRef.current.material.emissive.setHex(0x000000)
-        greenLightRef.current.material.emissive.setHex(0x00ff00)
+        redMaterial.emissive.setHex(0x000000)
+        yellowMaterial.emissive.setHex(0x000000)
+        greenMaterial.emissive.setHex(0x00ff00)
       }
     }
   })

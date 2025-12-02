@@ -67,7 +67,7 @@ const Car = ({ position, speed, color, path, pathIndex, carType = 'sedan' }: Car
   const dimensions = getCarDimensions(carType)
   const lastUpdate = useRef(0)
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     // Throttle updates for better performance
     lastUpdate.current += delta
     if (lastUpdate.current < 0.016) return // ~60fps max
@@ -181,7 +181,7 @@ const Car = ({ position, speed, color, path, pathIndex, carType = 'sedan' }: Car
         }
         
         return (
-          <group key={`wheel-${i}`} ref={wheelGroupRef} position={pos} rotation={[0, 0, Math.PI / 2]}>
+          <group key={`wheel-${i}`} ref={wheelGroupRef} position={pos as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
             {/* Tire */}
             <mesh castShadow={false}>
               <cylinderGeometry args={[dimensions.wheelRadius, dimensions.wheelRadius, dimensions.wheelWidth, 16]} />

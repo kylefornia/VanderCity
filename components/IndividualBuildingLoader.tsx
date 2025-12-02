@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, ReactNode, memo } from "react";
 import { Suspense } from "react";
 

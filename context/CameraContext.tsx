@@ -3,10 +3,14 @@
 import React, { createContext, useContext, useRef, ReactNode } from "react";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import type { OrbitControls as OrbitControlsType } from "three-stdlib";
 
 interface CameraContextType {
-  zoomToPosition: (position: [number, number, number], distance?: number) => void;
-  setControlsRef: (ref: React.RefObject<OrbitControls>) => void;
+  zoomToPosition: (position: [number, number, number], distance?: number, targetHeight?: number) => void;
+  setControlsRef: (ref: React.RefObject<OrbitControlsType>) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  resetZoom: () => void;
 }
 
 const CameraContext = createContext<CameraContextType | undefined>(undefined);
@@ -20,7 +24,7 @@ let animationState: {
   endTarget: THREE.Vector3;
   progress: number;
   duration: number;
-  controls: OrbitControls | null;
+  controls: OrbitControlsType | null;
 } = {
   isAnimating: false,
   startPosition: new THREE.Vector3(),
@@ -92,30 +96,38 @@ const animate = (currentTime: number) => {
 };
 
 export const CameraProvider = ({ children }: { children: ReactNode }) => {
-  const controlsRef = useRef<React.RefObject<OrbitControls> | null>(null);
+  const controlsRef = useRef<React.RefObject<OrbitControlsType> | null>(null);
 
-  const setControlsRef = (ref: React.RefObject<OrbitControls>) => {
+  const setControlsRef = (ref: React.RefObject<OrbitControlsType>) => {
     controlsRef.current = ref;
   };
 
   const zoomToPosition = (
     position: [number, number, number],
-    distance: number = 90
+    distance: number = 90,
+    targetHeight?: number
   ) => {
     if (!controlsRef.current?.current) return;
 
     const controls = controlsRef.current.current;
     const [targetX, targetY, targetZ] = position;
     
-    // Compensate for sidebar on the left - shift target to the left
-    const sidebarOffset = -25;
+    // Check if mobile (screen width < 768px)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    
+    // On mobile, sidebar is full screen, so no offset needed
+    // On desktop, compensate for sidebar on the left - shift target to the left
+    const sidebarOffset = isMobile ? 0 : -25;
     const adjustedTargetX = targetX + sidebarOffset;
 
     // Calculate camera position to look at the target
     // Position camera at an angle looking down at the building
     const angle = Math.PI / 4; // 45 degrees
     const cameraDistance = distance;
-    const cameraHeight = targetY + cameraDistance * 0.35;
+    // Use provided targetHeight or default to slightly above ground
+    const finalTargetY = targetHeight !== undefined ? targetHeight : targetY + 5;
+    // Increase camera height to ensure tooltips are visible
+    const cameraHeight = finalTargetY + cameraDistance * 0.5;
 
     // Calculate camera position in a circle around the target
     const cameraX = adjustedTargetX + cameraDistance * Math.cos(angle);
@@ -130,7 +142,7 @@ export const CameraProvider = ({ children }: { children: ReactNode }) => {
     animationState.startPosition.copy(currentPosition);
     animationState.startTarget.copy(currentTarget);
     animationState.endPosition.set(cameraX, cameraHeight, cameraZ);
-    animationState.endTarget.set(adjustedTargetX, targetY + 5, targetZ); // Look slightly above ground
+    animationState.endTarget.set(adjustedTargetX, finalTargetY, targetZ);
     animationState.progress = 0;
     animationState.duration = 1.5;
     animationState.controls = controls;
@@ -144,8 +156,57 @@ export const CameraProvider = ({ children }: { children: ReactNode }) => {
     animationFrameId = requestAnimationFrame(animate);
   };
 
+  const zoomIn = () => {
+    if (!controlsRef.current?.current) return;
+    const controls = controlsRef.current.current;
+    const camera = controls.object;
+    const target = controls.target;
+    
+    // Get current distance from camera to target
+    const direction = new THREE.Vector3()
+      .subVectors(camera.position, target)
+      .normalize();
+    const currentDistance = camera.position.distanceTo(target);
+    
+    // Zoom in by reducing distance by 20%
+    const newDistance = Math.max(20, currentDistance * 0.8);
+    const newPosition = new THREE.Vector3()
+      .copy(target)
+      .add(direction.multiplyScalar(newDistance));
+    
+    camera.position.copy(newPosition);
+    controls.update();
+  };
+
+  const zoomOut = () => {
+    if (!controlsRef.current?.current) return;
+    const controls = controlsRef.current.current;
+    const camera = controls.object;
+    const target = controls.target;
+    
+    // Get current distance from camera to target
+    const direction = new THREE.Vector3()
+      .subVectors(camera.position, target)
+      .normalize();
+    const currentDistance = camera.position.distanceTo(target);
+    
+    // Zoom out by increasing distance by 25%
+    const newDistance = Math.min(200, currentDistance * 1.25);
+    const newPosition = new THREE.Vector3()
+      .copy(target)
+      .add(direction.multiplyScalar(newDistance));
+    
+    camera.position.copy(newPosition);
+    controls.update();
+  };
+
+  const resetZoom = () => {
+    // Reset to default camera position
+    zoomToPosition([-25, 0, 0], 90);
+  };
+
   return (
-    <CameraContext.Provider value={{ zoomToPosition, setControlsRef }}>
+    <CameraContext.Provider value={{ zoomToPosition, setControlsRef, zoomIn, zoomOut, resetZoom }}>
       {children}
     </CameraContext.Provider>
   );

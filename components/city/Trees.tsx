@@ -1,11 +1,10 @@
-"use client";
-
 import * as THREE from "three";
 
 import { BLOCK_SIZE, GRID_SIZE, STREET_WIDTH } from "./cityConstants";
 
 import { useGLTF } from "@react-three/drei";
 import { useMemo, memo } from "react";
+import { useSceneSettings } from "@/context/SceneSettingsContext";
 
 // Tree model paths
 const TREE_MODELS = [
@@ -34,7 +33,17 @@ const TreeInstance = memo(({
   treeModel: THREE.Object3D; 
   groundOffset: number;
 }) => {
-  const instanceModel = useMemo(() => treeModel.clone(), [treeModel]);
+  const instanceModel = useMemo(() => {
+    const cloned = treeModel.clone();
+    // Ensure shadows are enabled on all meshes in the cloned model
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    return cloned;
+  }, [treeModel]);
   
   return (
     <group
@@ -46,7 +55,7 @@ const TreeInstance = memo(({
       rotation={[0, tree.rotation, 0]}
       scale={tree.scale}
     >
-      <primitive object={instanceModel} />
+      <primitive object={instanceModel} castShadow receiveShadow />
     </group>
   );
 });
@@ -54,6 +63,8 @@ const TreeInstance = memo(({
 TreeInstance.displayName = "TreeInstance";
 
 const Trees = () => {
+  const { treesMultiplier } = useSceneSettings();
+  
   // Load all three tree models
   const tree1 = useGLTF(TREE_MODELS[0]);
   const tree2 = useGLTF(TREE_MODELS[1]);
@@ -61,7 +72,17 @@ const Trees = () => {
 
   // Store the scenes for each tree model - clone once and reuse
   const treeModels = useMemo(() => {
-    return [tree1.scene.clone(), tree2.scene.clone(), tree3.scene.clone()];
+    const models = [tree1.scene.clone(), tree2.scene.clone(), tree3.scene.clone()];
+    // Enable shadows on all meshes in the tree models
+    models.forEach((model) => {
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+    });
+    return models;
   }, [tree1.scene, tree2.scene, tree3.scene]);
 
   // Pre-calculate ground offsets for each tree type
@@ -104,56 +125,11 @@ const Trees = () => {
 
         const seed = row * GRID_SIZE + col;
 
-        if (isPark) {
-          // Moderate tree density in parks
-          const parkTreeSpacing = 5.5;
-          const parkMargin = 2.0;
-          const parkStartX = blockStartX + parkMargin;
-          const parkEndX = blockEndX - parkMargin;
-          const parkStartZ = blockStartZ + parkMargin;
-          const parkEndZ = blockEndZ - parkMargin;
-
-          for (let px = parkStartX; px < parkEndX; px += parkTreeSpacing) {
-            for (let pz = parkStartZ; pz < parkEndZ; pz += parkTreeSpacing) {
-              const treeSeed = seed + px * 100 + pz * 1000;
-              const offsetX = (rng(treeSeed) - 0.5) * 1.5;
-              const offsetZ = (rng(treeSeed + 1) - 0.5) * 1.5;
-              const treeX = px + offsetX;
-              const treeZ = pz + offsetZ;
-
-              // Avoid center fountain area
-              const distFromCenter = Math.sqrt(
-                Math.pow(treeX - blockCenterX, 2) +
-                  Math.pow(treeZ - blockCenterZ, 2)
-              );
-              if (distFromCenter < 4) continue;
-
-              if (
-                Math.abs(treeX) < groundBound - 1 &&
-                Math.abs(treeZ) < groundBound - 1
-              ) {
-                const rotation = rng(treeSeed + 2) * Math.PI * 2;
-                // Ensure even distribution: cycle through 0, 1, 2
-                const treeType = Math.abs(Math.floor((treeSeed + px + pz) % 3));
-                const scale =
-                  treeType === 0
-                    ? 0.7 + rng(treeSeed + 4) * 0.3
-                    : treeType === 1
-                    ? 2.2 + rng(treeSeed + 4) * 0.6
-                    : 1.8 + rng(treeSeed + 4) * 0.6;
-
-                instances.push({
-                  position: new THREE.Vector3(treeX, 0, treeZ),
-                  rotation,
-                  treeType,
-                  scale,
-                });
-              }
-            }
-          }
-        } else {
-          // Sparse trees in regular blocks
-          const numTreesPerBlock = 2 + Math.floor(rng(seed + 100) * 3);
+        // Skip trees in center park (basketball court)
+        if (!isPark) {
+          // Sparse trees in regular blocks - apply multiplier
+          const baseNumTrees = 2 + Math.floor(rng(seed + 100) * 3);
+          const numTreesPerBlock = Math.floor(baseNumTrees * treesMultiplier);
 
           for (let i = 0; i < numTreesPerBlock; i++) {
             const treeSeed = seed + i * 1000;
@@ -237,7 +213,7 @@ const Trees = () => {
 
 
     return { treeInstances: instances };
-  }, []);
+  }, [treesMultiplier]);
 
   // Group tree instances by type for optimized rendering
   const treeInstancesByType = useMemo(() => {
@@ -264,7 +240,7 @@ const Trees = () => {
 
         return (
           <group key={typeIndex}>
-            {instances.map((tree, index) => {
+            {instances.map((tree) => {
               // Use a stable key based on position to help React optimize
               const key = `tree-${typeIndex}-${Math.round(tree.position.x * 10)}-${Math.round(tree.position.z * 10)}`;
               

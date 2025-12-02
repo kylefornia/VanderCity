@@ -1,16 +1,13 @@
-"use client";
-
 import * as THREE from "three";
 
 import { BuildingCategory, useResume } from "@/context/ResumeContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { FiBriefcase, FiCalendar, FiMapPin, FiX } from "react-icons/fi";
 import {
   HiOutlineAcademicCap,
-  HiOutlineCode,
   HiOutlineLightBulb,
 } from "react-icons/hi";
 import { Html, useGLTF } from "@react-three/drei";
-import { ThreeEvent } from "@react-three/fiber";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 
 import { IoBasketballOutline } from "react-icons/io5";
@@ -140,7 +137,8 @@ const isRedColor = (color: string): boolean => {
 const updateSceneMaterials = (
   scene: THREE.Object3D,
   baseColor: string,
-  buildingId?: string
+  buildingId?: string,
+  isSkyscraper?: boolean
 ) => {
   const palette = getPastelPalette(baseColor, buildingId);
   const isRed = isRedColor(baseColor);
@@ -172,13 +170,24 @@ const updateSceneMaterials = (
               finalColor = palette[materialIndex % palette.length];
             }
 
+            // Keep original colors for skyscrapers - don't modify them
+            // The shiny effect comes from material properties only
             material.color.copy(finalColor);
             materialIndex++;
 
             // Ensure materials have nice properties for pastel look
+            // Skyscrapers should look like glass (very low roughness, zero metalness)
             if (material instanceof THREE.MeshStandardMaterial) {
-              material.roughness = 1.0;
-              material.metalness = 0.0;
+              if (isSkyscraper) {
+                // Make skyscrapers look like glass - smooth, highly reflective, non-metallic
+                // Glass has very low roughness (close to 0) for maximum reflection and zero metalness
+                material.roughness = 0.0;
+                material.metalness = 0.0;
+              } else {
+                // Regular buildings keep matte pastel look
+                material.roughness = 1.0;
+                material.metalness = 0.0;
+              }
             }
           }
         });
@@ -200,16 +209,6 @@ useGLTF.preload("/models/Low Building 6.glb");
 // Preload schoolhouse model for education buildings
 useGLTF.preload("/models/Schoolhouse.glb");
 
-// Helper function to get icon for interest category
-const getInterestIcon = (category: string, name: string) => {
-  if (category === "sports") {
-    return <IoBasketballOutline className="w-5 h-5 text-red-600" />;
-  }
-  if (category === "hobby") {
-    return <MdOutlinePalette className="w-5 h-5 text-teal-600" />;
-  }
-  return <HiOutlineLightBulb className="w-5 h-5 text-gray-600" />;
-};
 
 interface CustomBuildingProps {
   position: [number, number, number];
@@ -230,7 +229,8 @@ const WorkBuildingComponent = ({
   color,
   buildingId,
 }: Omit<CustomBuildingProps, "category">) => {
-  const { setSelectedBuilding, resume, selectedBuilding } = useResume();
+  const { setSelectedBuilding, resume, selectedBuilding, isLeftPanelVisible } = useResume();
+  const isMobile = useIsMobile();
   const [isHovered, setIsHovered] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [tooltipOffset, setTooltipOffset] = useState<[number, number, number]>([
@@ -261,7 +261,6 @@ const WorkBuildingComponent = ({
 
   // Check if any building is selected (for translucency effect)
   const hasSelection = selectedBuilding !== null;
-  const shouldBeTranslucent = hasSelection && !isSelected;
 
   const handleClick = () => {
     setSelectedBuilding({ id: buildingId, category: "work" });
@@ -405,18 +404,23 @@ const WorkBuildingComponent = ({
     });
 
     // Update materials to use pastel colors
-    updateSceneMaterials(cloned, color, buildingId);
+    // Pass useSkyscraper flag to make skyscrapers shiny
+    updateSceneMaterials(cloned, color, buildingId, useSkyscraper);
     // Disable raycasting on all meshes in the cloned scene so only the hitbox receives clicks
+    // Enable shadows on all meshes
     cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.raycast = () => {}; // Disable raycasting on model meshes
         // Add userData to identify this building
         child.userData.buildingId = buildingId;
         child.userData.category = "work";
+        // Enable shadows
+        child.castShadow = true;
+        child.receiveShadow = true;
       }
     });
     return cloned;
-  }, [scene, color, buildingId]);
+  }, [scene, color, buildingId, useSkyscraper]);
 
   // Ensure raycasting stays disabled on all meshes (in case scene is modified)
   useEffect(() => {
@@ -601,7 +605,7 @@ const WorkBuildingComponent = ({
       </group>
 
       {/* Enhanced Tooltip */}
-      {(isHovered || isSelected) && experience && (
+      {(isHovered || isSelected) && experience && !(isMobile && isLeftPanelVisible) && (
         <Html
           position={[
             tooltipOffset[0],
@@ -689,8 +693,8 @@ const EducationBuildingComponent = ({
   color,
   buildingId,
 }: Omit<CustomBuildingProps, "category">) => {
-  const { setSelectedBuilding, resume, selectedBuilding } = useResume();
-  const seed = useMemo(() => Math.random() * 1000, []);
+  const { setSelectedBuilding, resume, selectedBuilding, isLeftPanelVisible } = useResume();
+  const isMobile = useIsMobile();
   const [isHovered, setIsHovered] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [tooltipOffset, setTooltipOffset] = useState<[number, number, number]>([
@@ -715,13 +719,9 @@ const EducationBuildingComponent = ({
   // Check if any building is selected (for translucency effect)
   // Selected buildings should NEVER be translucent
   const hasSelection = selectedBuilding !== null;
-  const shouldBeTranslucent = hasSelection && !isSelected;
 
   // Track translucency state for renderOrder
   const [isTranslucent, setIsTranslucent] = useState(false);
-
-  // Check if this is the white/green school
-  const isWhiteGreenSchool = color === "#FFFFFF" || color === "#ffffff";
 
   const handleClick = () => {
     setSelectedBuilding({ id: buildingId, category: "education" });
@@ -868,11 +868,15 @@ const EducationBuildingComponent = ({
     });
 
     // Disable raycasting on all meshes in the cloned scene so only the hitbox receives clicks
+    // Enable shadows on all meshes
     cloned.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.raycast = () => {}; // Disable raycasting on model meshes
         child.userData.buildingId = buildingId;
         child.userData.category = "education";
+        // Enable shadows
+        child.castShadow = true;
+        child.receiveShadow = true;
       }
     });
     return cloned;
@@ -1068,7 +1072,7 @@ const EducationBuildingComponent = ({
       </group>
 
       {/* Enhanced Tooltip */}
-      {(isHovered || isSelected) && education && (
+      {(isHovered || isSelected) && education && !(isMobile && isLeftPanelVisible) && (
         <Html
           position={[
             tooltipOffset[0],
@@ -1151,7 +1155,6 @@ const InterestBuildingComponent = ({
   buildingId,
 }: Omit<CustomBuildingProps, "category">) => {
   const { setSelectedBuilding, resume, selectedBuilding } = useResume();
-  const seed = useMemo(() => Math.random() * 1000, []);
   const [isHovered, setIsHovered] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [tooltipOffset, setTooltipOffset] = useState<[number, number, number]>([
@@ -1183,7 +1186,6 @@ const InterestBuildingComponent = ({
   // Check if any building is selected (for translucency effect)
   // Selected buildings should NEVER be translucent
   const hasSelection = selectedBuilding !== null;
-  const shouldBeTranslucent = hasSelection && !isSelected;
 
   const handleClick = () => {
     setSelectedBuilding({ id: buildingId, category: "interest" });
@@ -1268,23 +1270,6 @@ const InterestBuildingComponent = ({
     };
   }, []);
 
-  const outlineMaterial = useMemo(
-    () =>
-      new THREE.MeshStandardMaterial({
-        color: "#FFFF00",
-        emissive: "#FFFF00",
-        emissiveIntensity: 0.8,
-        metalness: 0.0,
-        roughness: 1.0,
-        flatShading: true,
-        side: THREE.BackSide,
-        depthWrite: false,
-        polygonOffset: true,
-        polygonOffsetFactor: -1,
-        polygonOffsetUnits: -1,
-      }),
-    []
-  );
 
   const materials = useMemo(() => {
     const pastelColor = toPastel(color);
@@ -1427,7 +1412,6 @@ const InterestBuildingComponent = ({
     // Calculate scale to maintain rectangular aspect ratio while fitting in available space
     // Basketball courts are rectangular (typically ~1.88:1 length:width ratio)
     // Standard basketball court: ~15m wide × ~28m long (1.87:1 ratio)
-    const courtAspectRatio = 28 / 15; // ~1.87:1 (length:width)
     const modelWidth = 10; // Model width in units
     const modelDepth = 28; // Model depth in units
 
@@ -1439,10 +1423,6 @@ const InterestBuildingComponent = ({
     // This maintains aspect ratio while ensuring it doesn't exceed the space
     // Reduced scale significantly to ensure it fits within the plot with proper margins
     const uniformScale = Math.min(scaleX, scaleZ) * 0.69; // 35% margin to ensure it fits within plot boundaries
-
-    // Calculate the actual dimensions after scaling
-    const scaledWidth = modelWidth * uniformScale;
-    const scaledDepth = modelDepth * uniformScale;
 
     // Use uniform scale to maintain aspect ratio
     const finalScaleX = uniformScale * 1.1;
@@ -2010,3 +1990,5 @@ const InterestBuildingComponent = ({
     </group>
   );
 };
+
+export const InterestBuilding = memo(InterestBuildingComponent);

@@ -236,7 +236,7 @@ const PolyPizzaModel = ({
   return (
     <group
       position={position}
-      scale={scaleArray}
+      scale={scaleArray as [number, number, number]}
       onClick={onClick}
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
