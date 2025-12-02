@@ -54,27 +54,52 @@ const ResumeUI = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   const detailViewRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+  const profileSectionRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
 
   const selectedExperience =
-    selectedBuilding?.category === "work"
+    selectedBuilding?.category === "work" && resume
       ? resume.experiences.find((exp) => exp.id === selectedBuilding.id)
       : null;
 
   const selectedEducation =
-    selectedBuilding?.category === "education"
+    selectedBuilding?.category === "education" && resume
       ? resume.education.find((edu) => edu.id === selectedBuilding.id)
       : null;
 
   const selectedInterest =
-    selectedBuilding?.category === "interest"
+    selectedBuilding?.category === "interest" && resume
       ? resume.interests.find((int) => int.id === selectedBuilding.id)
       : null;
 
   const selectedProject =
-    selectedBuilding?.category === "project"
+    selectedBuilding?.category === "project" && resume
       ? resume.personalProjects.find((proj) => proj.id === selectedBuilding.id)
       : null;
+
+  // Memoize whether to show profile section to prevent flickering
+  // Check resume availability directly - resume should always be available from context
+  const showProfileSection = useMemo(() => {
+    // Ensure resume exists and has required data
+    if (!resume || !resume.name || resume.name.trim() === "") {
+      return false;
+    }
+
+    // Only show when no building is selected
+    return selectedBuilding === null;
+  }, [selectedBuilding, resume]);
+
+  // Scroll sheet to top on mobile when profile section becomes visible
+  // This fixes the issue where content is in DOM but not visible after closing tooltip
+  useEffect(() => {
+    if (showProfileSection && isMobile && sheetRef.current) {
+      const sheet = sheetRef.current;
+      // Scroll to top to ensure profile section (at top of sheet) is visible
+      if (sheet.scrollTop > 0) {
+        sheet.scrollTo({ top: 0, behavior: "instant" });
+      }
+    }
+  }, [showProfileSection, isMobile]);
 
   const handleBackToList = () => {
     setSelectedBuilding(null);
@@ -251,7 +276,10 @@ const ResumeUI = () => {
     category: "work" | "education" | "interest" | "project",
     id: string
   ) => {
-    setSelectedBuilding({ category, id });
+    // Ensure we're setting the building correctly
+    if (id && category) {
+      setSelectedBuilding({ category, id });
+    }
     // Don't zoom or close on mobile - let user choose to view on map
   };
 
@@ -294,6 +322,7 @@ const ResumeUI = () => {
 
   // Filter resume items based on search query
   const filteredExperiences = useMemo(() => {
+    if (!resume) return [];
     if (!searchQuery) return resume.experiences;
     const query = searchQuery.toLowerCase();
     return resume.experiences.filter(
@@ -303,9 +332,10 @@ const ResumeUI = () => {
         exp.location.toLowerCase().includes(query) ||
         exp.technologies.some((tech) => tech.toLowerCase().includes(query))
     );
-  }, [resume.experiences, searchQuery]);
+  }, [resume, searchQuery]);
 
   const filteredEducation = useMemo(() => {
+    if (!resume) return [];
     if (!searchQuery) return resume.education;
     const query = searchQuery.toLowerCase();
     return resume.education.filter(
@@ -314,17 +344,19 @@ const ResumeUI = () => {
         edu.degree.toLowerCase().includes(query) ||
         edu.location.toLowerCase().includes(query)
     );
-  }, [resume.education, searchQuery]);
+  }, [resume, searchQuery]);
 
   const filteredInterests = useMemo(() => {
+    if (!resume) return [];
     if (!searchQuery) return resume.interests;
     const query = searchQuery.toLowerCase();
     return resume.interests.filter((int) =>
       int.name.toLowerCase().includes(query)
     );
-  }, [resume.interests, searchQuery]);
+  }, [resume, searchQuery]);
 
   const filteredProjects = useMemo(() => {
+    if (!resume) return [];
     if (!searchQuery) return resume.personalProjects;
     const query = searchQuery.toLowerCase();
     return resume.personalProjects.filter(
@@ -333,7 +365,7 @@ const ResumeUI = () => {
         proj.description.toLowerCase().includes(query) ||
         proj.technologies.some((tech) => tech.toLowerCase().includes(query))
     );
-  }, [resume.personalProjects, searchQuery]);
+  }, [resume, searchQuery]);
 
   const hasResults =
     filteredExperiences.length > 0 ||
@@ -496,12 +528,12 @@ const ResumeUI = () => {
       >
         <div
           ref={sheetRef}
-          className={`bg-white shadow-2xl flex flex-col overflow-hidden ${
+          className={`bg-white shadow-2xl flex flex-col ${
             isMobile
-              ? `w-full rounded-t-3xl ${
+              ? `w-full rounded-t-3xl overflow-y-auto ${
                   isDragging ? "" : "transition-all duration-300 ease-out"
                 }`
-              : `rounded-lg m-2 transition-[width] duration-150 ease-in-out ${
+              : `rounded-lg m-2 overflow-hidden transition-[width] duration-150 ease-in-out ${
                   selectedBuilding ? "w-[520px]" : "w-[420px]"
                 }`
           }`}
@@ -509,7 +541,7 @@ const ResumeUI = () => {
             isMobile
               ? (() => {
                   const viewportHeight = window.innerHeight;
-                  const navBarHeight = 64; // 4rem = 64px
+                  const navBarHeight = 0; // 4rem = 64px
                   const maxHeight = viewportHeight - navBarHeight;
                   const halfHeight = viewportHeight * 0.5;
                   const collapsedHeight = 153; // Peek height
@@ -594,22 +626,28 @@ const ResumeUI = () => {
             </div>
           )}
           {/* Profile Section - Only show in list view */}
-          {!selectedBuilding && (
-            <div className="px-6 py-3 bg-white border-b border-gray-200">
+          {showProfileSection && resume && resume.name && (
+            <div
+              ref={profileSectionRef}
+              key={`profile-section-${
+                selectedBuilding === null ? "visible" : "hidden"
+              }`}
+              className="px-4 md:px-6 py-3 bg-white border-b border-gray-200"
+            >
               {/* Image and Name/Job Row */}
               <div className="flex items-center gap-3 mb-2">
                 {/* Profile Picture */}
                 <div className="w-12 h-12 rounded-full flex-shrink-0 shadow-sm overflow-hidden">
                   <img
                     src="/dp.jpg"
-                    alt={resume.name}
+                    alt={resume.name || "Profile"}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       // Fallback to initials if image fails to load
                       const target = e.target as HTMLImageElement;
                       target.style.display = "none";
                       const parent = target.parentElement;
-                      if (parent) {
+                      if (parent && resume.name) {
                         parent.className =
                           "w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 flex items-center justify-center text-white text-lg font-semibold shadow-sm";
                         parent.textContent = resume.name
@@ -625,10 +663,10 @@ const ResumeUI = () => {
                 {/* Name and Title - Stacked on right */}
                 <div className="flex flex-col min-w-0 flex-1">
                   <h1 className="text-base font-medium text-gray-900 leading-tight truncate">
-                    {resume.name}
+                    {resume.name || "Name not available"}
                   </h1>
                   <p className="text-xs text-gray-600 leading-tight truncate">
-                    {resume.title}
+                    {resume.title || "Title not available"}
                   </p>
                 </div>
               </div>
@@ -729,10 +767,10 @@ const ResumeUI = () => {
                 </button>
                 <div className="flex-1 min-w-0">
                   <h1 className="text-base md:text-lg font-medium text-gray-900 leading-tight truncate">
-                    {resume.name}
+                    {resume?.name || ""}
                   </h1>
                   <p className="text-xs md:text-sm text-gray-600 mt-0.5 truncate">
-                    {resume.title}
+                    {resume?.title || ""}
                   </p>
                 </div>
                 {/* View on Map Button - Mobile Only */}
