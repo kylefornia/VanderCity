@@ -31,7 +31,7 @@ const SceneControls = () => {
   };
 
   return (
-    <div className={`fixed right-4 md:top-20 md:right-4 bg-white/95 backdrop-blur-md text-gray-900 rounded-xl shadow-2xl border border-gray-200 z-30 w-[200px] md:w-[220px] max-w-[calc(100vw-2rem)] overflow-hidden transition-all duration-200 flex flex-col ${
+    <div className={`fixed top-20 right-4 md:top-20 md:right-4 bg-white/95 backdrop-blur-md text-gray-900 rounded-xl shadow-2xl border border-gray-200 z-[90] w-[200px] md:w-[220px] max-w-[calc(100vw-2rem)] overflow-hidden transition-all duration-200 flex flex-col ${
       controlsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
     }`}>
       <div className="px-3 py-2 border-b border-gray-200">

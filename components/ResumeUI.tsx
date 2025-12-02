@@ -17,6 +17,7 @@ import {
   IoGlobeOutline,
   IoLocationOutline,
   IoMailOutline,
+  IoMenuOutline,
   IoSchoolOutline,
   IoSearchOutline,
   IoStarOutline,
@@ -24,6 +25,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useResume } from "@/context/ResumeContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const ResumeUI = () => {
   const {
@@ -42,6 +44,7 @@ const ResumeUI = () => {
   const [activeScreenshotIndex, setActiveScreenshotIndex] = useState(0);
   const headerRef = useRef<HTMLDivElement>(null);
   const detailViewRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const selectedExperience =
     selectedBuilding?.category === "work"
@@ -65,6 +68,10 @@ const ResumeUI = () => {
 
   const handleBackToList = () => {
     setSelectedBuilding(null);
+    // Close sidebar on mobile when going back to list
+    if (isMobile) {
+      setIsLeftPanelVisible(false);
+    }
   };
 
   const handleToggleLeftPanel = () => {
@@ -96,6 +103,10 @@ const ResumeUI = () => {
     // Zoom to the building
     if (zoomToBuilding) {
       zoomToBuilding(category, id);
+    }
+    // Close sidebar on mobile when selecting a building
+    if (isMobile) {
+      setIsLeftPanelVisible(false);
     }
   };
 
@@ -208,37 +219,109 @@ const ResumeUI = () => {
     };
   }, [selectedExperience]);
 
+  // Close sidebar on mobile when clicking outside
+  useEffect(() => {
+    if (!isMobile || !isLeftPanelVisible) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const sidebar = target.closest('[data-sidebar]');
+      const toggleButton = target.closest('[data-toggle-button]');
+      
+      if (!sidebar && !toggleButton) {
+        setIsLeftPanelVisible(false);
+      }
+    };
+
+    // Add slight delay to prevent immediate close on open
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("click", handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [isMobile, isLeftPanelVisible, setIsLeftPanelVisible]);
+
   return (
     <>
-      {/* Toggle Button - Google Style */}
-      <button
-        onClick={handleToggleLeftPanel}
-        onKeyDown={handleKeyDownToggle}
-        className={`absolute top-6 z-50 bg-white text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all duration-300 p-2.5 rounded-full shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          isLeftPanelVisible
-            ? selectedBuilding
-              ? "left-[536px]"
-              : "left-[436px]"
-            : "left-4"
-        }`}
-        style={{
-          willChange: "transform",
-          transform: "translateZ(0)",
-          backfaceVisibility: "hidden",
-        }}
-        aria-label={isLeftPanelVisible ? "Hide left panel" : "Show left panel"}
-        tabIndex={0}
-      >
-        {isLeftPanelVisible ? (
-          <IoChevronBackOutline className="w-4 h-4" />
-        ) : (
-          <IoChevronForwardOutline className="w-4 h-4" />
-        )}
-      </button>
+      {/* Toggle Button - Desktop Only */}
+      {!isMobile && (
+        <button
+          onClick={handleToggleLeftPanel}
+          onKeyDown={handleKeyDownToggle}
+          data-toggle-button
+          className={`absolute top-6 z-50 bg-white text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all duration-300 p-2.5 rounded-full shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            isLeftPanelVisible
+              ? selectedBuilding
+                ? "left-[536px]"
+                : "left-[436px]"
+              : "left-4"
+          }`}
+          style={{
+            willChange: "transform",
+            transform: "translateZ(0)",
+            backfaceVisibility: "hidden",
+          }}
+          aria-label={isLeftPanelVisible ? "Hide left panel" : "Show left panel"}
+          tabIndex={0}
+        >
+          {isLeftPanelVisible ? (
+            <IoChevronBackOutline className="w-4 h-4" />
+          ) : (
+            <IoChevronForwardOutline className="w-4 h-4" />
+          )}
+        </button>
+      )}
+
+      {/* Bottom Navigation Bar - Mobile Only */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-gray-200 shadow-lg safe-area-inset-bottom">
+          <div className="flex items-center justify-center h-16 px-4">
+            <button
+              onClick={handleToggleLeftPanel}
+              onKeyDown={handleKeyDownToggle}
+              data-toggle-button
+              className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation ${
+                isLeftPanelVisible
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
+              }`}
+              aria-label={isLeftPanelVisible ? "Close menu" : "Open menu"}
+              tabIndex={0}
+            >
+              {isLeftPanelVisible ? (
+                <>
+                  <IoCloseOutline className="w-5 h-5" />
+                  <span className="text-sm font-medium">Close</span>
+                </>
+              ) : (
+                <>
+                  <IoMenuOutline className="w-5 h-5" />
+                  <span className="text-sm font-medium">Menu</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Overlay for mobile */}
+      {isMobile && isLeftPanelVisible && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[52] transition-opacity duration-200"
+          onClick={() => setIsLeftPanelVisible(false)}
+          aria-hidden="true"
+        />
+      )}
 
       {/* Left Panel Container - Google Style */}
       <div
-        className={`absolute top-0 left-0 h-full transition-[opacity,transform] duration-200 ease-in-out z-40 ${
+        data-sidebar
+        className={`absolute top-0 left-0 h-full transition-[opacity,transform] duration-200 ease-in-out ${
+          isMobile ? "z-[55]" : "z-40"
+        } ${
           isLeftPanelVisible
             ? "opacity-100 translate-x-0 pointer-events-auto"
             : "opacity-0 -translate-x-full pointer-events-none"
@@ -251,10 +334,18 @@ const ResumeUI = () => {
         }}
       >
         <div
-          className={`bg-white shadow-lg flex flex-col rounded-lg m-2 overflow-hidden transition-[width] duration-150 ease-in-out ${
-            selectedBuilding ? "w-[520px]" : "w-[420px]"
+          className={`bg-white shadow-lg flex flex-col overflow-hidden transition-[width] duration-150 ease-in-out ${
+            isMobile
+              ? "w-full h-full rounded-none m-0"
+              : `rounded-lg m-2 ${
+                  selectedBuilding ? "w-[520px]" : "w-[420px]"
+                }`
           }`}
-          style={{ height: "calc(100% - 1rem)" }}
+          style={
+            isMobile
+              ? { height: "100%" }
+              : { height: "calc(100% - 1rem)" }
+          }
         >
           {/* Profile Section - Only show in list view */}
           {!selectedBuilding && (

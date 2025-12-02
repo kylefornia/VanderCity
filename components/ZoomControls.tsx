@@ -40,7 +40,7 @@ const ZoomControls = () => {
   };
 
   return (
-    <div className={`fixed top-20 right-4 md:top-20 md:right-[240px] bg-white/95 backdrop-blur-md text-gray-900 rounded-xl shadow-2xl border border-gray-200 z-30 overflow-hidden transition-all duration-200 flex flex-col ${
+    <div className={`fixed top-[240px] right-4 md:top-20 md:right-[240px] bg-white/95 backdrop-blur-md text-gray-900 rounded-xl shadow-2xl border border-gray-200 z-[90] overflow-hidden transition-all duration-200 flex flex-col ${
       controlsVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
     }`}>
       <div className="flex flex-col p-1.5">
