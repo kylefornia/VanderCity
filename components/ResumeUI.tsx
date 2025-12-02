@@ -137,17 +137,6 @@ const ResumeUI = () => {
     setSheetDragY(0);
   };
 
-  const handleSheetDragMove = (e: React.TouchEvent | React.MouseEvent) => {
-    if (!isMobile || !isDragging) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-    // When swiping up, clientY decreases, so deltaY is negative
-    // When swiping down, clientY increases, so deltaY is positive
-    const deltaY = clientY - dragStartY.current;
-    currentDragY.current = deltaY; // Store in ref for immediate access
-    setSheetDragY(deltaY);
-  };
 
   const handleSheetDragEnd = () => {
     if (!isMobile || !isDragging) return;
@@ -601,7 +590,7 @@ const ResumeUI = () => {
                 e.stopPropagation();
                 handleSheetDragStart(e);
               }}
-              onClick={(e) => {
+              onClick={() => {
                 // Only toggle on click if we didn't just drag
                 if (!isDragging && Math.abs(sheetDragY) < 5) {
                   handleToggleSheetExpanded();
@@ -1129,7 +1118,7 @@ const ResumeUI = () => {
                               key={index}
                               type="button"
                               onClick={() => handleOpenScreenshotModal(index)}
-                              className="flex-shrink-0 w-full h-48 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 hover:border-purple-400 hover:shadow-md transition-shadow transition-colors"
+                              className="flex-shrink-0 w-full h-48 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 hover:border-purple-400 hover:shadow-md transition-all"
                               aria-label={`Open screenshot ${index + 1} of ${
                                 selectedProject.name
                               }`}
