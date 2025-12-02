@@ -386,6 +386,10 @@ const ResumeUI = () => {
     isScreenshotModalOpen,
     setIsScreenshotModalOpen,
     zoomToBuilding,
+    zoomToHome,
+    isSkillsPageOpen,
+    setIsSkillsPageOpen,
+    skills,
   } = useResume();
   const [searchQuery, setSearchQuery] = useState("");
   const [logoErrors, setLogoErrors] = useState<Set<string>>(new Set());
@@ -433,9 +437,9 @@ const ResumeUI = () => {
       return false;
     }
 
-    // Only show when no building is selected
-    return selectedBuilding === null;
-  }, [selectedBuilding, resume]);
+    // Only show when no building is selected and skills page is not open
+    return selectedBuilding === null && !isSkillsPageOpen;
+  }, [selectedBuilding, resume, isSkillsPageOpen]);
 
   // Scroll sheet to top on mobile when profile section becomes visible
   // This fixes the issue where content is in DOM but not visible after closing tooltip
@@ -451,6 +455,7 @@ const ResumeUI = () => {
 
   const handleBackToList = () => {
     setSelectedBuilding(null);
+    setIsSkillsPageOpen(false);
     // Don't close the sheet when going back to list
   };
 
@@ -613,14 +618,20 @@ const ResumeUI = () => {
       // Ensure we're setting the building correctly
       if (id && category) {
         setSelectedBuilding({ category, id });
+        // Auto-zoom on desktop, but not on mobile - let mobile users choose to view on map
+        if (!isMobile && zoomToBuilding) {
+          zoomToBuilding(category, id);
+        }
       }
-      // Don't zoom or close on mobile - let user choose to view on map
     },
-    [setSelectedBuilding]
+    [setSelectedBuilding, isMobile, zoomToBuilding]
   );
 
   const handleViewOnMap = () => {
-    if (selectedBuilding && zoomToBuilding) {
+    if (isSkillsPageOpen && zoomToHome) {
+      // For skills page, zoom to home and show tooltip
+      zoomToHome();
+    } else if (selectedBuilding && zoomToBuilding) {
       zoomToBuilding(selectedBuilding.category, selectedBuilding.id);
     }
     // Close sidebar on mobile after viewing on map
@@ -628,6 +639,26 @@ const ResumeUI = () => {
       setIsLeftPanelVisible(false);
     }
   };
+
+  const handleProfileClick = useCallback(() => {
+    if (zoomToHome) {
+      zoomToHome();
+      // Close sidebar on mobile after viewing on map
+      if (isMobile) {
+        setIsLeftPanelVisible(false);
+      }
+    }
+  }, [zoomToHome, isMobile, setIsLeftPanelVisible]);
+
+  const handleProfileKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleProfileClick();
+      }
+    },
+    [handleProfileClick]
+  );
 
   const handleClearSearch = () => {
     setSearchQuery("");
@@ -991,41 +1022,72 @@ const ResumeUI = () => {
               }`}
               className="px-4 md:px-6 py-3 bg-white border-b border-gray-200"
             >
-              {/* Image and Name/Job Row */}
+              {/* Image and Name/Job Row with View Skills Button */}
               <div className="flex items-center gap-3 mb-2">
-                {/* Profile Picture */}
-                <div className="w-12 h-12 rounded-full flex-shrink-0 shadow-sm overflow-hidden">
-                  <img
-                    src="/dp.jpg"
-                    alt={resume.name || "Profile"}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      // Fallback to initials if image fails to load
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = "none";
-                      const parent = target.parentElement;
-                      if (parent && resume.name) {
-                        parent.className =
-                          "w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 flex items-center justify-center text-white text-lg font-semibold shadow-sm";
-                        parent.textContent = resume.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase();
-                      }
-                    }}
-                  />
-                </div>
+                <button
+                  onClick={handleProfileClick}
+                  onKeyDown={handleProfileKeyDown}
+                  className="flex items-center gap-3 flex-1 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg -mx-2 px-2 py-1 hover:bg-gray-50 transition-colors"
+                  aria-label="Go to my house on the map"
+                  tabIndex={0}
+                >
+                  {/* Profile Picture */}
+                  <div className="w-12 h-12 rounded-full flex-shrink-0 shadow-sm overflow-hidden">
+                    <img
+                      src="/dp.jpg"
+                      alt={resume.name || "Profile"}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        const parent = target.parentElement;
+                        if (parent && resume.name) {
+                          parent.className =
+                            "w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex-shrink-0 flex items-center justify-center text-white text-lg font-semibold shadow-sm";
+                          parent.textContent = resume.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase();
+                        }
+                      }}
+                    />
+                  </div>
 
-                {/* Name and Title - Stacked on right */}
-                <div className="flex flex-col min-w-0 flex-1">
-                  <h1 className="text-base font-medium text-gray-900 leading-tight truncate">
-                    {resume.name || "Name not available"}
-                  </h1>
-                  <p className="text-xs text-gray-600 leading-tight truncate">
-                    {resume.title || "Title not available"}
-                  </p>
-                </div>
+                  {/* Name and Title - Stacked on right */}
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <h1 className="text-base font-medium text-gray-900 leading-tight truncate">
+                      {resume.name || "Name not available"}
+                    </h1>
+                    <p className="text-xs text-gray-600 leading-tight truncate">
+                      {resume.title || "Title not available"}
+                    </p>
+                  </div>
+                </button>
+
+                {/* View Skills Button */}
+                <button
+                  onClick={() => {
+                    setIsSkillsPageOpen(true);
+                    setIsLeftPanelVisible(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setIsSkillsPageOpen(true);
+                      setIsLeftPanelVisible(true);
+                    }
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 active:bg-gray-100 transition-all duration-200 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  aria-label="View skills"
+                  tabIndex={0}
+                >
+                  <IoCodeSlashOutline className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium whitespace-nowrap">
+                    Skills
+                  </span>
+                </button>
               </div>
 
               {/* Contact Info */}
@@ -1104,8 +1166,8 @@ const ResumeUI = () => {
             </div>
           )}
 
-          {/* Header Section with Back Button - Only show in detail view */}
-          {selectedBuilding && (
+          {/* Header Section with Back Button - Only show in detail view or skills page */}
+          {(selectedBuilding || isSkillsPageOpen) && (
             <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
               <div className="flex items-center gap-2 md:gap-3">
                 <button
@@ -1124,14 +1186,16 @@ const ResumeUI = () => {
                 </button>
                 <div className="flex-1 min-w-0">
                   <h1 className="text-base md:text-lg font-medium text-gray-900 leading-tight truncate">
-                    {resume?.name || ""}
+                    {isSkillsPageOpen ? "Skills" : resume?.name || ""}
                   </h1>
                   <p className="text-xs md:text-sm text-gray-600 mt-0.5 truncate">
-                    {resume?.title || ""}
+                    {isSkillsPageOpen
+                      ? "Technical expertise and proficiencies"
+                      : resume?.title || ""}
                   </p>
                 </div>
                 {/* View on Map Button - Mobile Only */}
-                {isMobile && (
+                {isMobile && (selectedBuilding || isSkillsPageOpen) && (
                   <button
                     onClick={handleViewOnMap}
                     onKeyDown={(e) => {
@@ -1155,7 +1219,7 @@ const ResumeUI = () => {
           )}
 
           {/* Search Bar - Google Maps Style - Only show in list view, hidden on mobile */}
-          {!selectedBuilding && !isMobile && (
+          {!selectedBuilding && !isSkillsPageOpen && !isMobile && (
             <div className="px-6 py-4 border-b border-gray-200 bg-white">
               <div className="relative">
                 <IoSearchOutline className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
@@ -1184,8 +1248,91 @@ const ResumeUI = () => {
             </div>
           )}
 
-          {/* Content - List or Detail View */}
-          {selectedBuilding ? (
+          {/* Content - List, Detail View, or Skills Page */}
+          {isSkillsPageOpen ? (
+            /* Skills Page View */
+            <div
+              key="skills-view"
+              ref={detailViewRef}
+              className={`flex-1 overflow-y-auto opacity-0 animate-[fadeIn_0.3s_ease-in-out_forwards] ${
+                isMobile ? "pb-20" : ""
+              }`}
+            >
+              <div className="px-6 py-5">
+                {/* Strong Skills */}
+                {skills.strong && skills.strong.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">
+                      Core Expertise
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {skills.strong.map((skill, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-sm"
+                        >
+                          <span className="text-gray-900 font-medium">
+                            {skill.name}
+                          </span>
+                          <span className="text-gray-500 ml-2">
+                            {skill.level}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Experienced Skills */}
+                {skills.experienced && skills.experienced.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">
+                      Experienced
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {skills.experienced.map((skill, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+                        >
+                          <span className="text-gray-900 font-medium">
+                            {skill.name}
+                          </span>
+                          <span className="text-gray-500 ml-2">
+                            {skill.level}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Specialized Skills */}
+                {skills.specialized && skills.specialized.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-base font-semibold text-gray-900 mb-3">
+                      Specialized
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {skills.specialized.map((skill, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+                        >
+                          <span className="text-gray-900 font-medium">
+                            {skill.name}
+                          </span>
+                          <span className="text-gray-500 ml-2">
+                            {skill.level}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : selectedBuilding ? (
             /* Detail View - Google Style */
             <div
               key="detail-view"

@@ -580,12 +580,29 @@ export interface SelectedBuilding {
   category: BuildingCategory;
 }
 
+export interface Skill {
+  name: string;
+  level: string;
+}
+
+export interface SkillsData {
+  strong: Skill[];
+  experienced: Skill[];
+  specialized: Skill[];
+}
+
 interface ResumeContextType {
   resume: ResumeData;
   selectedBuilding: SelectedBuilding | null;
   setSelectedBuilding: (building: SelectedBuilding | null) => void;
   updateResume: () => void;
   zoomToBuilding?: (category: BuildingCategory, id: string) => void;
+  zoomToHome?: () => void;
+  isHomeSelected: boolean;
+  setIsHomeSelected: (selected: boolean) => void;
+  isSkillsPageOpen: boolean;
+  setIsSkillsPageOpen: (open: boolean) => void;
+  skills: SkillsData;
   isLeftPanelVisible: boolean;
   setIsLeftPanelVisible: (visible: boolean) => void;
   isScreenshotModalOpen: boolean;
@@ -606,10 +623,31 @@ export const ResumeProvider = ({
   ) => void;
 }) => {
   const resume = useMemo(() => transformResumeData(), []);
-  const [selectedBuilding, setSelectedBuilding] =
+  const [selectedBuilding, setSelectedBuildingState] =
     useState<SelectedBuilding | null>(null);
+  const [isHomeSelected, setIsHomeSelected] = useState(false);
+  const [isSkillsPageOpen, setIsSkillsPageOpen] = useState(false);
   const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true);
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
+
+  // Extract skills data from resume.json
+  const skills = useMemo((): SkillsData => {
+    return {
+      strong: resumeData.skills.strong || [],
+      experienced: resumeData.skills.experienced || [],
+      specialized: resumeData.skills.specialized || [],
+    };
+  }, []);
+
+  // Wrapper to clear home selection when another building is selected
+  const setSelectedBuilding = (building: SelectedBuilding | null) => {
+    setSelectedBuildingState(building);
+    // Clear home selection and skills page when selecting another building
+    if (building !== null) {
+      setIsHomeSelected(false);
+      setIsSkillsPageOpen(false);
+    }
+  };
 
   const updateResume = () => {
     // Note: Since we're using static data from JSON, updates won't persist
@@ -621,6 +659,9 @@ export const ResumeProvider = ({
 
   const zoomToBuilding = (category: BuildingCategory, id: string) => {
     if (!zoomToPosition) return;
+
+    // Clear home selection when zooming to another building
+    setIsHomeSelected(false);
 
     let buildingPosition: [number, number, number] | null = null;
     let targetHeight: number | undefined = undefined;
@@ -656,6 +697,54 @@ export const ResumeProvider = ({
     }
   };
 
+  const zoomToHome = () => {
+    if (!zoomToPosition) return;
+
+    // Clear any selected building when zooming to home
+    setSelectedBuilding(null);
+    // Set home as selected to show tooltip
+    setIsHomeSelected(true);
+    // Open skills page in sidebar
+    setIsSkillsPageOpen(true);
+    // Ensure sidebar is visible
+    setIsLeftPanelVisible(true);
+
+    // Calculate occupied positions (same logic as in transformResumeData)
+    const occupiedPositions = new Set<string>();
+
+    // Add work positions
+    resume.experiences.forEach((exp) => {
+      const gridPos = worldToGridPosition(exp.buildingPosition);
+      if (gridPos) {
+        occupiedPositions.add(`${gridPos[0]},${gridPos[1]}`);
+      }
+    });
+
+    // Add education positions
+    resume.education.forEach((edu) => {
+      const gridPos = worldToGridPosition(edu.buildingPosition);
+      if (gridPos) {
+        occupiedPositions.add(`${gridPos[0]},${gridPos[1]}`);
+      }
+    });
+
+    // Add project positions
+    resume.personalProjects.forEach((proj) => {
+      const gridPos = worldToGridPosition(proj.buildingPosition);
+      if (gridPos) {
+        occupiedPositions.add(`${gridPos[0]},${gridPos[1]}`);
+      }
+    });
+
+    // Find home position using the same logic as Buildings.tsx
+    const homePosition = findHomePosition(occupiedPositions);
+    if (homePosition) {
+      const homeWorldPosition = gridToWorldPosition(homePosition[0], homePosition[1]);
+      // House is a small building, so use a closer distance and lower target height
+      zoomToPosition(homeWorldPosition, 80, 5);
+    }
+  };
+
   return (
     <ResumeContext.Provider
       value={{
@@ -664,6 +753,12 @@ export const ResumeProvider = ({
         setSelectedBuilding,
         updateResume,
         zoomToBuilding,
+        zoomToHome,
+        isHomeSelected,
+        setIsHomeSelected,
+        isSkillsPageOpen,
+        setIsSkillsPageOpen,
+        skills,
         isLeftPanelVisible,
         setIsLeftPanelVisible,
         isScreenshotModalOpen,

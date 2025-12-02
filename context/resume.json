@@ -287,6 +287,14 @@
       {
         "name": "Azure",
         "level": "Intermediate"
+      },
+      {
+        "name": "Supabase",
+        "level": "Advanced"
+      },
+      {
+        "name": "Zustand",
+        "level": "Intermediate"
       }
     ],
     "experienced": [
@@ -429,6 +437,27 @@
       ]
     },
     {
+      "name": "Webo 🔒",
+      "description": "A cross-platform desktop application built to protect children while using the internet with on-device AI. Uses modern large language models to summarize and rate websites across multiple browsers.",
+      "technologies": [
+        "Electron",
+        "React",
+        "LangChain",
+        "Ollama",
+        "Microsoft Phi 3 AI",
+        "Tailwind CSS"
+      ],
+      "githubUrl": "",
+      "liveUrl": "",
+      "image": "/images/projects/webo.jpg",
+      "featured": true,
+      "screenshots": [
+        "/images/projects/webo-1.png",
+        "/images/projects/webo-2.png",
+        "/images/projects/webo-3.png"
+      ]
+    },
+    {
       "name": "Mirada",
       "description": "Mirada is a chrome extension that replaces your 'New Tab' page into a customizable desktop experience. Includes a variety of tools built with React JS with full desktop-like experience supporting unlimited open windows.",
       "technologies": [
@@ -460,22 +489,6 @@
       "githubUrl": "",
       "liveUrl": "",
       "image": "/images/projects/petlog.jpg",
-      "featured": true
-    },
-    {
-      "name": "Webo 🔒",
-      "description": "A cross-platform desktop application built to protect children while using the internet with on-device AI. Uses modern large language models to summarize and rate websites across multiple browsers.",
-      "technologies": [
-        "Electron",
-        "React",
-        "LangChain",
-        "Ollama",
-        "Microsoft Phi 3 AI",
-        "Tailwind CSS"
-      ],
-      "githubUrl": "",
-      "liveUrl": "",
-      "image": "/images/projects/webo.jpg",
       "featured": true
     },
     {

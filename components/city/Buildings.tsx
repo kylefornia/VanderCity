@@ -3,13 +3,13 @@ import * as THREE from "three";
 import { BLOCK_SIZE, GRID_SIZE, STREET_WIDTH } from "./cityConstants";
 import { EducationBuilding, WorkBuilding } from "./CustomBuildings";
 import { FaBasketballBall, FaLightbulb, FaPalette } from "react-icons/fa";
-import { FiX, FiMapPin, FiMail, FiPhone } from "react-icons/fi";
-import { HiOutlineCode } from "react-icons/hi";
+import { FiMail, FiMapPin, FiPhone, FiX } from "react-icons/fi";
 import { Html, useGLTF } from "@react-three/drei";
-import { memo, useEffect, useMemo, useRef, useState, Suspense } from "react";
+import { Suspense, memo, useEffect, useMemo, useRef, useState } from "react";
 
-import { useResume } from "@/context/ResumeContext";
+import { HiOutlineCode } from "react-icons/hi";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useResume } from "@/context/ResumeContext";
 
 // Helper function to generate a very colorful palette based on base color
 const getPastelPalette = (
@@ -555,14 +555,21 @@ InterestBuildingBlock.displayName = "InterestBuildingBlock";
 
 // Generic building component using GLB models (kept for backward compatibility)
 
-
 // House Building using House.glb model with hover tooltip
 interface HouseBuildingProps {
   position: [number, number, number];
 }
 
 const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
-  const { resume, isScreenshotModalOpen } = useResume();
+  const {
+    resume,
+    isScreenshotModalOpen,
+    isHomeSelected,
+    setIsHomeSelected,
+    setIsSkillsPageOpen,
+    setIsLeftPanelVisible,
+  } = useResume();
+  const isMobile = useIsMobile();
   const [isHovered, setIsHovered] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [tooltipOffset, setTooltipOffset] = useState<[number, number, number]>([
@@ -732,9 +739,28 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
         }}
         onPointerLeave={(e) => {
           e.stopPropagation();
-          handleHover(false);
+          // Only hide on leave if not selected (clicked)
+          if (!isHomeSelected) {
+            handleHover(false);
+          }
           document.body.style.cursor = "default";
           setTooltipOffset([0, 0, 0]);
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          // Show tooltip on click
+          setIsHomeSelected(true);
+          setIsHovered(true);
+          setIsFadingOut(false);
+          // Clear any timeouts
+          if (showTimeoutRef.current) {
+            clearTimeout(showTimeoutRef.current);
+            showTimeoutRef.current = null;
+          }
+          if (fadeTimeoutRef.current) {
+            clearTimeout(fadeTimeoutRef.current);
+            fadeTimeoutRef.current = null;
+          }
         }}
       >
         <boxGeometry args={[hitboxWidth, hitboxHeight + 20, hitboxDepth]} />
@@ -756,7 +782,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
       </group>
 
       {/* Invisible hitbox at tooltip position to maintain hover when moving to tooltip */}
-      {isHovered && (
+      {(isHovered || isHomeSelected) && (
         <mesh
           position={[
             tooltipOffset[0],
@@ -791,7 +817,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
       )}
 
       {/* Simple Profile Card Tooltip */}
-      {isHovered && !isScreenshotModalOpen && (
+      {(isHovered || isHomeSelected) && !isScreenshotModalOpen && (
         <Html
           position={[
             tooltipOffset[0],
@@ -828,6 +854,7 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
               onClick={(e) => {
                 e.stopPropagation();
                 setIsHovered(false);
+                setIsHomeSelected(false);
               }}
               className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-700 transition-colors p-1.5 rounded-lg hover:bg-gray-100"
               aria-label="Close tooltip"
@@ -880,17 +907,26 @@ const HouseBuilding = memo(({ position }: HouseBuildingProps) => {
                 </div>
               )}
 
-              {/* Introduction */}
-              {resume.summary && (
-                <div className="pt-1.5 border-t border-gray-100">
-                  <div className="text-xs text-gray-600 leading-relaxed text-center">
-                    <span className="font-medium text-gray-900">
-                      Hi, I'm {resume.name.split(" ")[0]}! 👋
-                    </span>{" "}
-                    <span>{resume.summary.split(".")[0]}.</span>
-                  </div>
-                </div>
-              )}
+              {/* Skills Button */}
+              <div className="pt-1.5 border-t border-gray-100">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsSkillsPageOpen(true);
+                    setIsLeftPanelVisible(true);
+                    // Close tooltip on mobile when opening skills page
+                    if (isMobile) {
+                      setIsHovered(false);
+                      setIsHomeSelected(false);
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 text-sm font-medium"
+                  aria-label="My skills"
+                >
+                  <HiOutlineCode className="w-4 h-4" />
+                  <span>My Skills</span>
+                </button>
+              </div>
 
               {/* Contact Info */}
               <div className="space-y-2 pt-1.5 border-t border-gray-100">
