@@ -1,15 +1,17 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
-import { useMemo, useRef, useCallback, useEffect } from "react";
-import CityScene from "@/components/CityScene";
-import ResumeUI from "@/components/ResumeUI";
-import FPSCounter from "@/components/FPSCounter";
-import SceneControls from "@/components/SceneControls";
-import ZoomControls from "@/components/ZoomControls";
+import { useMemo, useRef, useCallback, useEffect, Suspense, lazy } from "react";
 import { ResumeProvider } from "@/context/ResumeContext";
 import { CameraProvider, useCamera } from "@/context/CameraContext";
 import { SceneSettingsProvider, useSceneSettings } from "@/context/SceneSettingsContext";
+
+// Lazy load heavy components
+const CityScene = lazy(() => import("@/components/CityScene"));
+const ResumeUI = lazy(() => import("@/components/ResumeUI"));
+const FPSCounter = lazy(() => import("@/components/FPSCounter"));
+const SceneControls = lazy(() => import("@/components/SceneControls"));
+const ZoomControls = lazy(() => import("@/components/ZoomControls"));
 
 // Helper component to configure shadow camera and toggle shadows globally
 const ShadowCameraHelper = () => {
@@ -236,6 +238,8 @@ const SceneWithControls = () => {
   );
 };
 
+const UILoadingFallback = () => null;
+
 const HomeContent = () => {
   const { zoomToPosition } = useCamera();
 
@@ -253,14 +257,24 @@ const HomeContent = () => {
             gl.shadowMap.type = THREE.PCFSoftShadowMap;
           }}
         >
-          <SceneWithControls />
+          <Suspense fallback={null}>
+            <SceneWithControls />
+          </Suspense>
         </Canvas>
 
-        {/* UI Overlay */}
-        <ResumeUI />
-        <FPSCounter />
-        <SceneControls />
-        <ZoomControls />
+        {/* UI Overlay - Lazy loaded */}
+        <Suspense fallback={<UILoadingFallback />}>
+          <ResumeUI />
+        </Suspense>
+        <Suspense fallback={null}>
+          <FPSCounter />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SceneControls />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ZoomControls />
+        </Suspense>
       </div>
     </ResumeProvider>
   );

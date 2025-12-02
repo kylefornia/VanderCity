@@ -1,17 +1,18 @@
 import * as THREE from "three";
-
-import Buildings from "./city/Buildings";
-import Cars from "./city/Cars";
-import CityDetails from "./city/CityDetails";
-import Parks from "./city/Parks";
-import People from "./city/People";
-import StreetGrid from "./city/StreetGrid";
-import Trees from "./city/Trees";
-import Birds from "./city/Birds";
-import Clouds from "./city/Clouds";
 import { useFrame } from "@react-three/fiber";
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, lazy, Suspense } from "react";
 import ProgressiveRenderer from "./ProgressiveRenderer";
+
+// Lazy load city components for better code splitting
+const Buildings = lazy(() => import("./city/Buildings"));
+const Cars = lazy(() => import("./city/Cars"));
+const CityDetails = lazy(() => import("./city/CityDetails"));
+const Parks = lazy(() => import("./city/Parks"));
+const People = lazy(() => import("./city/People"));
+const StreetGrid = lazy(() => import("./city/StreetGrid"));
+const Trees = lazy(() => import("./city/Trees"));
+const Birds = lazy(() => import("./city/Birds"));
+const Clouds = lazy(() => import("./city/Clouds"));
 
 const CityScene = () => {
   const cityRef = useRef<THREE.Group>(null);
@@ -243,41 +244,59 @@ const CityScene = () => {
         <group position={[0, 0, 0]}>
           {/* Priority 0: Critical - Render immediately (core structure) */}
           <ProgressiveRenderer priority={0}>
-            <StreetGrid />
+            <Suspense fallback={null}>
+              <StreetGrid />
+            </Suspense>
           </ProgressiveRenderer>
           <ProgressiveRenderer priority={0}>
-            <Buildings />
+            <Suspense fallback={null}>
+              <Buildings />
+            </Suspense>
           </ProgressiveRenderer>
 
           {/* Priority 1: High - Render after 100ms (environment) */}
           <ProgressiveRenderer priority={1} delay={100}>
-            <Trees />
+            <Suspense fallback={null}>
+              <Trees />
+            </Suspense>
           </ProgressiveRenderer>
           <ProgressiveRenderer priority={1} delay={150}>
-            <Parks />
+            <Suspense fallback={null}>
+              <Parks />
+            </Suspense>
           </ProgressiveRenderer>
           <ProgressiveRenderer priority={1} delay={200}>
-            <CityDetails />
+            <Suspense fallback={null}>
+              <CityDetails />
+            </Suspense>
           </ProgressiveRenderer>
 
           {/* Priority 2: Medium - Render after 300ms (animated elements) */}
           <ProgressiveRenderer priority={2} delay={300}>
-            <People />
+            <Suspense fallback={null}>
+              <People />
+            </Suspense>
           </ProgressiveRenderer>
           <ProgressiveRenderer priority={2} delay={350}>
-            <Cars />
+            <Suspense fallback={null}>
+              <Cars />
+            </Suspense>
           </ProgressiveRenderer>
 
           {/* Priority 3: Low - Render after 500ms (ambient elements) */}
           <ProgressiveRenderer priority={3} delay={500}>
-            <Birds />
+            <Suspense fallback={null}>
+              <Birds />
+            </Suspense>
           </ProgressiveRenderer>
         </group>
       </group>
 
       {/* Clouds Above Island - Priority 3: Low */}
       <ProgressiveRenderer priority={3} delay={550}>
-        <Clouds />
+        <Suspense fallback={null}>
+          <Clouds />
+        </Suspense>
       </ProgressiveRenderer>
     </group>
   );
