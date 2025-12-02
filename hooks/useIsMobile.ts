@@ -10,15 +10,28 @@ export const useIsMobile = (): boolean => {
   });
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint
+      // Clear any pending timeout
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      // Debounce resize events to improve performance
+      timeoutId = setTimeout(() => {
+        setIsMobile(window.innerWidth < 768); // md breakpoint
+      }, 150);
     };
 
     // Check on mount in case SSR/hydration mismatch
     checkMobile();
-    window.addEventListener("resize", checkMobile);
+    window.addEventListener("resize", checkMobile, { passive: true });
 
     return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       window.removeEventListener("resize", checkMobile);
     };
   }, []);

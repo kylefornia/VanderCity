@@ -1,3 +1,9 @@
+import type {
+  Education,
+  Interest,
+  JobExperience,
+  PersonalProject,
+} from "@/context/ResumeContext";
 import {
   FaBasketballBall,
   FaGithub,
@@ -23,10 +29,352 @@ import {
   IoSearchOutline,
   IoStarOutline,
 } from "react-icons/io5";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useResume } from "@/context/ResumeContext";
+
+// Memoized list item components to prevent unnecessary re-renders
+interface ExperienceListItemProps {
+  exp: JobExperience;
+  isSelected: boolean;
+  onSelect: (category: "work", id: string) => void;
+}
+
+const ExperienceListItem = memo(
+  ({ exp, isSelected, onSelect }: ExperienceListItemProps) => {
+    const handleClick = useCallback(() => {
+      onSelect("work", exp.id);
+    }, [onSelect, exp.id]);
+
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect("work", exp.id);
+        }
+      },
+      [onSelect, exp.id]
+    );
+
+    return (
+      <button
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        className={`w-full text-left bg-white rounded-lg border transition-all duration-200 ${
+          isSelected
+            ? "border-blue-500 shadow-md bg-blue-50"
+            : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+        }`}
+        tabIndex={0}
+        aria-label={`View ${exp.company} experience`}
+      >
+        <div className="p-4">
+          <div className="flex items-start gap-4">
+            <div className="mt-0.5 flex-shrink-0">
+              <div
+                className={`p-2 rounded-lg ${
+                  isSelected ? "bg-blue-100" : "bg-gray-100"
+                }`}
+              >
+                <IoBriefcaseOutline
+                  className={`w-4 h-4 ${
+                    isSelected ? "text-blue-600" : "text-gray-600"
+                  }`}
+                />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-medium text-gray-900 leading-tight">
+                {exp.company}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                {exp.position}
+              </p>
+              <div className="flex flex-row items-center gap-2 mt-2 w-full overflow-hidden">
+                <p className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
+                  {exp.duration}
+                </p>
+                {exp.location && (
+                  <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto">
+                    <IoLocationOutline className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <p className="text-xs text-gray-600 truncate whitespace-nowrap">
+                      {exp.location}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </button>
+    );
+  }
+);
+ExperienceListItem.displayName = "ExperienceListItem";
+
+interface EducationListItemProps {
+  edu: Education;
+  isSelected: boolean;
+  onSelect: (category: "education", id: string) => void;
+}
+
+const EducationListItem = memo(
+  ({ edu, isSelected, onSelect }: EducationListItemProps) => {
+    const handleClick = useCallback(() => {
+      onSelect("education", edu.id);
+    }, [onSelect, edu.id]);
+
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect("education", edu.id);
+        }
+      },
+      [onSelect, edu.id]
+    );
+
+    return (
+      <button
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        className={`w-full text-left bg-white rounded-lg border transition-all duration-200 ${
+          isSelected
+            ? "border-green-500 shadow-md bg-green-50"
+            : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+        }`}
+        tabIndex={0}
+        aria-label={`View ${edu.school} education`}
+      >
+        <div className="p-4">
+          <div className="flex items-start gap-4">
+            <div className="mt-0.5 flex-shrink-0">
+              <div
+                className={`p-2 rounded-lg ${
+                  isSelected ? "bg-green-100" : "bg-gray-100"
+                }`}
+              >
+                <IoSchoolOutline
+                  className={`w-4 h-4 ${
+                    isSelected ? "text-green-600" : "text-gray-600"
+                  }`}
+                />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-medium text-gray-900 leading-tight">
+                {edu.school}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                {edu.degree}
+              </p>
+              <div className="flex flex-row items-center gap-2 mt-2 w-full overflow-hidden">
+                <p className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
+                  {edu.duration}
+                </p>
+                {edu.location && (
+                  <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto">
+                    <IoLocationOutline className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <p className="text-xs text-gray-600 truncate whitespace-nowrap">
+                      {edu.location}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </button>
+    );
+  }
+);
+EducationListItem.displayName = "EducationListItem";
+
+interface ProjectListItemProps {
+  proj: PersonalProject;
+  isSelected: boolean;
+  onSelect: (category: "project", id: string) => void;
+}
+
+const ProjectListItem = memo(
+  ({ proj, isSelected, onSelect }: ProjectListItemProps) => {
+    const handleClick = useCallback(() => {
+      onSelect("project", proj.id);
+    }, [onSelect, proj.id]);
+
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect("project", proj.id);
+        }
+      },
+      [onSelect, proj.id]
+    );
+
+    return (
+      <button
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        className={`w-full text-left bg-white rounded-lg border transition-all duration-200 ${
+          isSelected
+            ? "border-purple-500 shadow-md bg-purple-50"
+            : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+        }`}
+        tabIndex={0}
+        aria-label={`View ${proj.name} project`}
+      >
+        <div className="p-4">
+          <div className="flex items-start gap-4">
+            <div className="mt-0.5 flex-shrink-0">
+              <div
+                className={`p-2 rounded-lg ${
+                  isSelected ? "bg-purple-100" : "bg-gray-100"
+                }`}
+              >
+                <IoCodeSlashOutline
+                  className={`w-4 h-4 ${
+                    isSelected ? "text-purple-600" : "text-gray-600"
+                  }`}
+                />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-medium text-gray-900 leading-tight">
+                {proj.name}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 leading-relaxed line-clamp-2">
+                {proj.description}
+              </p>
+              {proj.technologies.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {proj.technologies.slice(0, 3).map((tech, idx) => (
+                    <span
+                      key={idx}
+                      className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-lg"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                  {proj.technologies.length > 3 && (
+                    <span className="text-xs px-2 py-1 text-gray-400">
+                      +{proj.technologies.length - 3}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </button>
+    );
+  }
+);
+ProjectListItem.displayName = "ProjectListItem";
+
+interface InterestListItemProps {
+  int: Interest;
+  isSelected: boolean;
+  onSelect: (category: "interest", id: string) => void;
+  getInterestCategoryIcon: (category: string) => JSX.Element;
+}
+
+const InterestListItem = memo(
+  ({
+    int,
+    isSelected,
+    onSelect,
+    getInterestCategoryIcon,
+  }: InterestListItemProps) => {
+    const handleClick = useCallback(() => {
+      onSelect("interest", int.id);
+    }, [onSelect, int.id]);
+
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect("interest", int.id);
+        }
+      },
+      [onSelect, int.id]
+    );
+
+    const isSports = int.category === "sports";
+    const isHobby = int.category === "hobby";
+
+    return (
+      <button
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        className={`w-full text-left bg-white rounded-lg border transition-all duration-200 ${
+          isSelected
+            ? isSports
+              ? "border-red-500 shadow-md bg-red-50"
+              : isHobby
+              ? "border-teal-500 shadow-md bg-teal-50"
+              : "border-orange-500 shadow-md bg-orange-50"
+            : "border-gray-200 hover:border-gray-300 hover:shadow-md"
+        }`}
+        tabIndex={0}
+        aria-label={`View ${int.name} interest`}
+      >
+        <div className="p-4">
+          <div className="flex items-start gap-4">
+            <div className="mt-0.5 flex-shrink-0">
+              <div
+                className={`p-2 rounded-lg ${
+                  isSelected
+                    ? isSports
+                      ? "bg-red-100"
+                      : isHobby
+                      ? "bg-teal-100"
+                      : "bg-orange-100"
+                    : "bg-gray-100"
+                }`}
+              >
+                <div
+                  className={`${
+                    isSelected
+                      ? isSports
+                        ? "text-red-600"
+                        : isHobby
+                        ? "text-teal-600"
+                        : "text-orange-600"
+                      : "text-gray-600"
+                  }`}
+                >
+                  {getInterestCategoryIcon(int.category)}
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-medium text-gray-900 leading-tight">
+                {int.name}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 leading-relaxed line-clamp-2">
+                {int.description}
+              </p>
+            </div>
+          </div>
+        </div>
+      </button>
+    );
+  }
+);
+InterestListItem.displayName = "InterestListItem";
+
+// Type guard helper
+const isBuildingSelected = (
+  building: { category: string; id: string } | null,
+  category: string,
+  id: string
+): boolean => {
+  return (
+    building !== null && building.category === category && building.id === id
+  );
+};
 
 const ResumeUI = () => {
   const {
@@ -136,7 +484,6 @@ const ResumeUI = () => {
     currentDragY.current = 0;
     setSheetDragY(0);
   };
-
 
   const handleSheetDragEnd = useCallback(() => {
     if (!isMobile || !isDragging) return;
@@ -251,7 +598,7 @@ const ResumeUI = () => {
     }
   };
 
-  const getInterestCategoryIcon = (category: string) => {
+  const getInterestCategoryIcon = useCallback((category: string) => {
     if (category === "sports") {
       return <FaBasketballBall className="w-3 h-3 text-gray-500" />;
     }
@@ -259,18 +606,18 @@ const ResumeUI = () => {
       return <FaPalette className="w-3 h-3 text-gray-500" />;
     }
     return <FaLightbulb className="w-3 h-3 text-gray-500" />;
-  };
+  }, []);
 
-  const handleSelectBuilding = (
-    category: "work" | "education" | "interest" | "project",
-    id: string
-  ) => {
-    // Ensure we're setting the building correctly
-    if (id && category) {
-      setSelectedBuilding({ category, id });
-    }
-    // Don't zoom or close on mobile - let user choose to view on map
-  };
+  const handleSelectBuilding = useCallback(
+    (category: "work" | "education" | "interest" | "project", id: string) => {
+      // Ensure we're setting the building correctly
+      if (id && category) {
+        setSelectedBuilding({ category, id });
+      }
+      // Don't zoom or close on mobile - let user choose to view on map
+    },
+    [setSelectedBuilding]
+  );
 
   const handleViewOnMap = () => {
     if (selectedBuilding && zoomToBuilding) {
@@ -378,19 +725,34 @@ const ResumeUI = () => {
     }
   }, [selectedBuilding]);
 
-  // Parallax scroll effect for cover photo
+  // Parallax scroll effect for cover photo - throttled for performance
   useEffect(() => {
     const scrollContainer = detailViewRef.current;
     if (!scrollContainer || !selectedExperience) return;
 
+    let rafId: number | null = null;
+    let lastScrollTop = 0;
+
     const handleScroll = () => {
-      const scrollTop = scrollContainer.scrollTop;
-      // Parallax effect: background moves slower than scroll (0.5x speed)
-      setScrollY(scrollTop * 0.5);
+      if (rafId !== null) return; // Skip if already scheduled
+
+      rafId = requestAnimationFrame(() => {
+        const scrollTop = scrollContainer.scrollTop;
+        // Only update if scroll position changed significantly (performance optimization)
+        if (Math.abs(scrollTop - lastScrollTop) > 1) {
+          // Parallax effect: background moves slower than scroll (0.5x speed)
+          setScrollY(scrollTop * 0.5);
+          lastScrollTop = scrollTop;
+        }
+        rafId = null;
+      });
     };
 
     scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
       scrollContainer.removeEventListener("scroll", handleScroll);
     };
   }, [selectedExperience]);
@@ -526,60 +888,66 @@ const ResumeUI = () => {
                   selectedBuilding ? "w-[520px]" : "w-[420px]"
                 }`
           }`}
-          style={
-            isMobile
-              ? (() => {
-                  const viewportHeight = window.innerHeight;
-                  const navBarHeight = 0; // 4rem = 64px
-                  const maxHeight = viewportHeight - navBarHeight;
-                  const halfHeight = viewportHeight * 0.5;
-                  const collapsedHeight = 153; // Peek height
+          style={useMemo(() => {
+            if (!isMobile) {
+              return { height: "calc(100% - 1rem)" };
+            }
 
-                  if (isDragging) {
-                    // During drag, adjust height based on drag distance
-                    let baseHeight: number;
-                    if (dragStartState.current === "expanded") {
-                      baseHeight = maxHeight;
-                    } else if (dragStartState.current === "half") {
-                      baseHeight = halfHeight;
-                    } else {
-                      baseHeight = collapsedHeight;
-                    }
+            const viewportHeight = window.innerHeight;
+            const navBarHeight = 0; // 4rem = 64px
+            const maxHeight = viewportHeight - navBarHeight;
+            const halfHeight = viewportHeight * 0.5;
+            const collapsedHeight = 153; // Peek height
 
-                    const newHeight = Math.max(
-                      collapsedHeight,
-                      Math.min(maxHeight, baseHeight - sheetDragY)
-                    );
-                    return {
-                      height: `${newHeight}px`,
-                      maxHeight: `${maxHeight}px`,
-                    };
-                  } else {
-                    // When not dragging, use fixed heights based on state
-                    // If sheet is not visible, height should be 0
-                    if (!isLeftPanelVisible) {
-                      return {
-                        height: "0px",
-                        maxHeight: `${maxHeight}px`,
-                      };
-                    }
+            if (isDragging) {
+              // During drag, adjust height based on drag distance
+              let baseHeight: number;
+              if (dragStartState.current === "expanded") {
+                baseHeight = maxHeight;
+              } else if (dragStartState.current === "half") {
+                baseHeight = halfHeight;
+              } else {
+                baseHeight = collapsedHeight;
+              }
 
-                    let height: string;
-                    if (sheetState === "expanded") {
-                      height = `${maxHeight}px`;
-                    } else if (sheetState === "half") {
-                      height = `${halfHeight}px`;
-                    } else {
-                      height = `${collapsedHeight}px`;
-                    }
-                    return {
-                      height,
-                      maxHeight: `${maxHeight}px`,
-                    };
-                  }
-                })()
-              : { height: "calc(100% - 1rem)" }
-          }
+              const newHeight = Math.max(
+                collapsedHeight,
+                Math.min(maxHeight, baseHeight - sheetDragY)
+              );
+              return {
+                height: `${newHeight}px`,
+                maxHeight: `${maxHeight}px`,
+              };
+            } else {
+              // When not dragging, use fixed heights based on state
+              // If sheet is not visible, height should be 0
+              if (!isLeftPanelVisible) {
+                return {
+                  height: "0px",
+                  maxHeight: `${maxHeight}px`,
+                };
+              }
+
+              let height: string;
+              if (sheetState === "expanded") {
+                height = `${maxHeight}px`;
+              } else if (sheetState === "half") {
+                height = `${halfHeight}px`;
+              } else {
+                height = `${collapsedHeight}px`;
+              }
+              return {
+                height,
+                maxHeight: `${maxHeight}px`,
+              };
+            }
+          }, [
+            isMobile,
+            isDragging,
+            sheetDragY,
+            sheetState,
+            isLeftPanelVisible,
+          ])}
         >
           {/* Drag Handle - Mobile Only */}
           {isMobile && (
@@ -1215,83 +1583,18 @@ const ResumeUI = () => {
                       </div>
                       <div className="space-y-2">
                         {filteredExperiences.map((exp) => {
-                          const isSelected =
-                            selectedBuilding !== null &&
-                            (
-                              selectedBuilding as {
-                                category: string;
-                                id: string;
-                              }
-                            ).category === "work" &&
-                            (
-                              selectedBuilding as {
-                                category: string;
-                                id: string;
-                              }
-                            ).id === exp.id;
+                          const isSelected = isBuildingSelected(
+                            selectedBuilding,
+                            "work",
+                            exp.id
+                          );
                           return (
-                            <button
+                            <ExperienceListItem
                               key={exp.id}
-                              onClick={() =>
-                                handleSelectBuilding("work", exp.id)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  handleSelectBuilding("work", exp.id);
-                                }
-                              }}
-                              className={`w-full text-left bg-white rounded-lg border transition-all duration-200 ${
-                                isSelected
-                                  ? "border-blue-500 shadow-md bg-blue-50"
-                                  : "border-gray-200 hover:border-gray-300 hover:shadow-md"
-                              }`}
-                              tabIndex={0}
-                              aria-label={`View ${exp.company} experience`}
-                            >
-                              <div className="p-4">
-                                <div className="flex items-start gap-4">
-                                  <div className="mt-0.5 flex-shrink-0">
-                                    <div
-                                      className={`p-2 rounded-lg ${
-                                        isSelected
-                                          ? "bg-blue-100"
-                                          : "bg-gray-100"
-                                      }`}
-                                    >
-                                      <IoBriefcaseOutline
-                                        className={`w-4 h-4 ${
-                                          isSelected
-                                            ? "text-blue-600"
-                                            : "text-gray-600"
-                                        }`}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-base font-medium text-gray-900 leading-tight">
-                                      {exp.company}
-                                    </p>
-                                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-                                      {exp.position}
-                                    </p>
-                                    <div className="flex flex-row items-center gap-2 mt-2 w-full overflow-hidden">
-                                      <p className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
-                                        {exp.duration}
-                                      </p>
-                                      {exp.location && (
-                                        <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto">
-                                          <IoLocationOutline className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                          <p className="text-xs text-gray-600 truncate whitespace-nowrap">
-                                            {exp.location}
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </button>
+                              exp={exp}
+                              isSelected={isSelected}
+                              onSelect={handleSelectBuilding}
+                            />
                           );
                         })}
                       </div>
@@ -1306,83 +1609,18 @@ const ResumeUI = () => {
                       </div>
                       <div className="space-y-2">
                         {filteredEducation.map((edu) => {
-                          const isSelected =
-                            selectedBuilding !== null &&
-                            (
-                              selectedBuilding as {
-                                category: string;
-                                id: string;
-                              }
-                            ).category === "education" &&
-                            (
-                              selectedBuilding as {
-                                category: string;
-                                id: string;
-                              }
-                            ).id === edu.id;
+                          const isSelected = isBuildingSelected(
+                            selectedBuilding,
+                            "education",
+                            edu.id
+                          );
                           return (
-                            <button
+                            <EducationListItem
                               key={edu.id}
-                              onClick={() =>
-                                handleSelectBuilding("education", edu.id)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  handleSelectBuilding("education", edu.id);
-                                }
-                              }}
-                              className={`w-full text-left bg-white rounded-lg border transition-all duration-200 ${
-                                isSelected
-                                  ? "border-green-500 shadow-md bg-green-50"
-                                  : "border-gray-200 hover:border-gray-300 hover:shadow-md"
-                              }`}
-                              tabIndex={0}
-                              aria-label={`View ${edu.school} education`}
-                            >
-                              <div className="p-4">
-                                <div className="flex items-start gap-4">
-                                  <div className="mt-0.5 flex-shrink-0">
-                                    <div
-                                      className={`p-2 rounded-lg ${
-                                        isSelected
-                                          ? "bg-green-100"
-                                          : "bg-gray-100"
-                                      }`}
-                                    >
-                                      <IoSchoolOutline
-                                        className={`w-4 h-4 ${
-                                          isSelected
-                                            ? "text-green-600"
-                                            : "text-gray-600"
-                                        }`}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-base font-medium text-gray-900 leading-tight">
-                                      {edu.school}
-                                    </p>
-                                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-                                      {edu.degree}
-                                    </p>
-                                    <div className="flex flex-row items-center gap-2 mt-2 w-full overflow-hidden">
-                                      <p className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
-                                        {edu.duration}
-                                      </p>
-                                      {edu.location && (
-                                        <div className="flex items-center gap-1.5 flex-shrink-0 ml-auto">
-                                          <IoLocationOutline className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                          <p className="text-xs text-gray-600 truncate whitespace-nowrap">
-                                            {edu.location}
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </button>
+                              edu={edu}
+                              isSelected={isSelected}
+                              onSelect={handleSelectBuilding}
+                            />
                           );
                         })}
                       </div>
@@ -1397,89 +1635,18 @@ const ResumeUI = () => {
                       </div>
                       <div className="space-y-2">
                         {filteredProjects.map((proj) => {
-                          const isSelected =
-                            selectedBuilding !== null &&
-                            (
-                              selectedBuilding as {
-                                category: string;
-                                id: string;
-                              }
-                            ).category === "project" &&
-                            (
-                              selectedBuilding as {
-                                category: string;
-                                id: string;
-                              }
-                            ).id === proj.id;
+                          const isSelected = isBuildingSelected(
+                            selectedBuilding,
+                            "project",
+                            proj.id
+                          );
                           return (
-                            <button
+                            <ProjectListItem
                               key={proj.id}
-                              onClick={() =>
-                                handleSelectBuilding("project", proj.id)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  handleSelectBuilding("project", proj.id);
-                                }
-                              }}
-                              className={`w-full text-left bg-white rounded-lg border transition-all duration-200 ${
-                                isSelected
-                                  ? "border-purple-500 shadow-md bg-purple-50"
-                                  : "border-gray-200 hover:border-gray-300 hover:shadow-md"
-                              }`}
-                              tabIndex={0}
-                              aria-label={`View ${proj.name} project`}
-                            >
-                              <div className="p-4">
-                                <div className="flex items-start gap-4">
-                                  <div className="mt-0.5 flex-shrink-0">
-                                    <div
-                                      className={`p-2 rounded-lg ${
-                                        isSelected
-                                          ? "bg-purple-100"
-                                          : "bg-gray-100"
-                                      }`}
-                                    >
-                                      <IoCodeSlashOutline
-                                        className={`w-4 h-4 ${
-                                          isSelected
-                                            ? "text-purple-600"
-                                            : "text-gray-600"
-                                        }`}
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-base font-medium text-gray-900 leading-tight">
-                                      {proj.name}
-                                    </p>
-                                    <p className="text-sm text-gray-600 mt-1 leading-relaxed line-clamp-2">
-                                      {proj.description}
-                                    </p>
-                                    {proj.technologies.length > 0 && (
-                                      <div className="flex flex-wrap gap-1.5 mt-2">
-                                        {proj.technologies
-                                          .slice(0, 3)
-                                          .map((tech, idx) => (
-                                            <span
-                                              key={idx}
-                                              className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-lg"
-                                            >
-                                              {tech}
-                                            </span>
-                                          ))}
-                                        {proj.technologies.length > 3 && (
-                                          <span className="text-xs px-2 py-1 text-gray-400">
-                                            +{proj.technologies.length - 3}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </button>
+                              proj={proj}
+                              isSelected={isSelected}
+                              onSelect={handleSelectBuilding}
+                            />
                           );
                         })}
                       </div>
@@ -1494,87 +1661,19 @@ const ResumeUI = () => {
                       </div>
                       <div className="space-y-2">
                         {filteredInterests.map((int) => {
-                          const isSelected =
-                            selectedBuilding !== null &&
-                            (
-                              selectedBuilding as {
-                                category: string;
-                                id: string;
-                              }
-                            ).category === "interest" &&
-                            (
-                              selectedBuilding as {
-                                category: string;
-                                id: string;
-                              }
-                            ).id === int.id;
-                          const isSports = int.category === "sports";
-                          const isHobby = int.category === "hobby";
-
+                          const isSelected = isBuildingSelected(
+                            selectedBuilding,
+                            "interest",
+                            int.id
+                          );
                           return (
-                            <button
+                            <InterestListItem
                               key={int.id}
-                              onClick={() =>
-                                handleSelectBuilding("interest", int.id)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.preventDefault();
-                                  handleSelectBuilding("interest", int.id);
-                                }
-                              }}
-                              className={`w-full text-left bg-white rounded-lg border transition-all duration-200 ${
-                                isSelected
-                                  ? isSports
-                                    ? "border-red-500 shadow-md bg-red-50"
-                                    : isHobby
-                                    ? "border-teal-500 shadow-md bg-teal-50"
-                                    : "border-orange-500 shadow-md bg-orange-50"
-                                  : "border-gray-200 hover:border-gray-300 hover:shadow-md"
-                              }`}
-                              tabIndex={0}
-                              aria-label={`View ${int.name} interest`}
-                            >
-                              <div className="p-4">
-                                <div className="flex items-start gap-4">
-                                  <div className="mt-0.5 flex-shrink-0">
-                                    <div
-                                      className={`p-2 rounded-lg ${
-                                        isSelected
-                                          ? isSports
-                                            ? "bg-red-100"
-                                            : isHobby
-                                            ? "bg-teal-100"
-                                            : "bg-orange-100"
-                                          : "bg-gray-100"
-                                      }`}
-                                    >
-                                      <div
-                                        className={`${
-                                          isSelected
-                                            ? isSports
-                                              ? "text-red-600"
-                                              : isHobby
-                                              ? "text-teal-600"
-                                              : "text-orange-600"
-                                            : "text-gray-600"
-                                        }`}
-                                      >
-                                        {getInterestCategoryIcon(int.category)}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-base font-medium text-gray-900 leading-tight">
-                                      {int.name}
-                                    </p>
-                                    <p className="text-sm text-gray-600 mt-1 leading-relaxed line-clamp-2">
-                                      {int.description}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </button>
+                              int={int}
+                              isSelected={isSelected}
+                              onSelect={handleSelectBuilding}
+                              getInterestCategoryIcon={getInterestCategoryIcon}
+                            />
                           );
                         })}
                       </div>
