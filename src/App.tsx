@@ -7,7 +7,6 @@ import ResumeUI from "@/components/ResumeUI";
 import FPSCounter from "@/components/FPSCounter";
 import SceneControls from "@/components/SceneControls";
 import ZoomControls from "@/components/ZoomControls";
-import SettingsButton from "@/components/SettingsButton";
 import { ResumeProvider } from "@/context/ResumeContext";
 import { CameraProvider, useCamera } from "@/context/CameraContext";
 import { SceneSettingsProvider, useSceneSettings } from "@/context/SceneSettingsContext";

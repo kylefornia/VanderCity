@@ -827,8 +827,8 @@ const ResumeUI = () => {
                         {filteredExperiences.map((exp) => {
                           const isSelected =
                             selectedBuilding !== null &&
-                            selectedBuilding?.category === "work" &&
-                            selectedBuilding?.id === exp.id;
+                            (selectedBuilding as { category: string; id: string }).category === "work" &&
+                            (selectedBuilding as { category: string; id: string }).id === exp.id;
                           return (
                             <button
                               key={exp.id}
@@ -908,8 +908,8 @@ const ResumeUI = () => {
                         {filteredEducation.map((edu) => {
                           const isSelected =
                             selectedBuilding !== null &&
-                            selectedBuilding?.category === "education" &&
-                            selectedBuilding?.id === edu.id;
+                            (selectedBuilding as { category: string; id: string }).category === "education" &&
+                            (selectedBuilding as { category: string; id: string }).id === edu.id;
                           return (
                             <button
                               key={edu.id}
@@ -989,8 +989,8 @@ const ResumeUI = () => {
                         {filteredProjects.map((proj) => {
                           const isSelected =
                             selectedBuilding !== null &&
-                            selectedBuilding?.category === "project" &&
-                            selectedBuilding?.id === proj.id;
+                            (selectedBuilding as { category: string; id: string }).category === "project" &&
+                            (selectedBuilding as { category: string; id: string }).id === proj.id;
                           return (
                             <button
                               key={proj.id}
@@ -1076,8 +1076,8 @@ const ResumeUI = () => {
                         {filteredInterests.map((int) => {
                           const isSelected =
                             selectedBuilding !== null &&
-                            selectedBuilding?.category === "interest" &&
-                            selectedBuilding?.id === int.id;
+                            (selectedBuilding as { category: string; id: string }).category === "interest" &&
+                            (selectedBuilding as { category: string; id: string }).id === int.id;
                           const isSports = int.category === "sports";
                           const isHobby = int.category === "hobby";
 

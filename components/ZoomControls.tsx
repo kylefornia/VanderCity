@@ -1,4 +1,4 @@
-import { IoAddOutline, IoRemoveOutline, IoHomeOutline, IoSearchOutline } from "react-icons/io5";
+import { IoAddOutline, IoRemoveOutline, IoHomeOutline } from "react-icons/io5";
 import { useCamera } from "@/context/CameraContext";
 import { useSceneSettings } from "@/context/SceneSettingsContext";
 

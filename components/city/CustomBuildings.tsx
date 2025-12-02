@@ -260,7 +260,7 @@ const WorkBuildingComponent = ({
   );
 
   // Check if any building is selected (for translucency effect)
-  const hasSelection = selectedBuilding !== null;
+  // const hasSelection = selectedBuilding !== null;
 
   const handleClick = () => {
     setSelectedBuilding({ id: buildingId, category: "work" });
@@ -690,9 +690,8 @@ const EducationBuildingComponent = ({
   width,
   depth,
   height,
-  color,
   buildingId,
-}: Omit<CustomBuildingProps, "category">) => {
+}: Omit<CustomBuildingProps, "category" | "color">) => {
   const { setSelectedBuilding, resume, selectedBuilding, isLeftPanelVisible } = useResume();
   const isMobile = useIsMobile();
   const [isHovered, setIsHovered] = useState(false);
@@ -718,7 +717,7 @@ const EducationBuildingComponent = ({
 
   // Check if any building is selected (for translucency effect)
   // Selected buildings should NEVER be translucent
-  const hasSelection = selectedBuilding !== null;
+  // const hasSelection = selectedBuilding !== null;
 
   // Track translucency state for renderOrder
   const [isTranslucent, setIsTranslucent] = useState(false);
@@ -1155,6 +1154,10 @@ const InterestBuildingComponent = ({
   buildingId,
 }: Omit<CustomBuildingProps, "category">) => {
   const { setSelectedBuilding, resume, selectedBuilding } = useResume();
+  const seed = useMemo(() => {
+    // Generate a deterministic seed from buildingId
+    return buildingId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  }, [buildingId]);
   const [isHovered, setIsHovered] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [tooltipOffset, setTooltipOffset] = useState<[number, number, number]>([
@@ -1185,7 +1188,7 @@ const InterestBuildingComponent = ({
 
   // Check if any building is selected (for translucency effect)
   // Selected buildings should NEVER be translucent
-  const hasSelection = selectedBuilding !== null;
+  // const hasSelection = selectedBuilding !== null;
 
   const handleClick = () => {
     setSelectedBuilding({ id: buildingId, category: "interest" });

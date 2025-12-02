@@ -234,11 +234,15 @@ const generateSpiralPosition = (
 
 // Helper function to generate building positions for education and interests
 // Uses remaining positions after work and projects are placed
+// Unused function - kept for reference
+/*
 const _generateBuildingPosition = (
   _index: number,
   _total: number,
   _offset: number = 0
 ): [number, number, number] => {
+  const CENTER_ROW = 2;
+  const CENTER_COL = 2;
 
   // Get all positions excluding center park
   const allPositions: Array<[number, number]> = [];
@@ -250,10 +254,11 @@ const _generateBuildingPosition = (
     }
   }
 
-  const idx = (index + offset) % allPositions.length;
+  const idx = (_index + _offset) % allPositions.length;
   const position = allPositions[idx];
   return gridToWorldPosition(position[0], position[1]);
 };
+*/
 
 // Helper function to find the first available position for home
 // This matches the logic in Buildings.tsx where home is placed at first available spot
@@ -438,7 +443,7 @@ const transformResumeData = (): ResumeData => {
   );
 
   // Transform education - handle optional education field
-  const education: Education[] = (resumeData.education || []).map((edu, index) => {
+  const education: Education[] = ((resumeData as any).education || []).map((edu: any, index: number) => {
     // Assign specific colors: first school = white/green, second = red
     let buildingColor: string;
     if (index === 0) {
@@ -497,7 +502,7 @@ const transformResumeData = (): ResumeData => {
   });
 
   // Add education positions
-  (resumeData.education || []).forEach((_, index) => {
+  ((resumeData as any).education || []).forEach((_: any, index: number) => {
     const position = generateSpiralPosition(index, (resumeData.projects || []).length);
     const gridPos = worldToGridPosition(position);
     if (gridPos) {

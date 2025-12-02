@@ -2,7 +2,6 @@ import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { STREET_WIDTH, BLOCK_SIZE, GRID_SIZE } from "./cityConstants";
 
 // Preload the flying gull model
 useGLTF.preload("/models/Flying gull.glb");
@@ -26,7 +25,6 @@ const Birds = () => {
   // Create bird instances with flight paths - organized in flocks of 3
   const birds = useMemo(() => {
     const birdInstances: BirdInstance[] = [];
-    const totalSize = GRID_SIZE * BLOCK_SIZE + (GRID_SIZE + 1) * STREET_WIDTH;
     const groundBound = 80;
     const numFlocks = 1; // Number of flocks - just 1 group
     const birdsPerFlock = 3; // Birds per flock

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useRef, ReactNode } from "react";
-import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsType } from "three-stdlib";
 
