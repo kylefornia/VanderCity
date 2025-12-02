@@ -1322,7 +1322,6 @@ const Buildings = () => {
     const buildingElements: JSX.Element[] = [];
     const totalSize = GRID_SIZE * BLOCK_SIZE + (GRID_SIZE + 1) * STREET_WIDTH;
     const startPos = -totalSize / 2;
-    let buildingIndex = 0;
 
     // Helper function to calculate grid cell center position
     const getGridPosition = (
@@ -1386,7 +1385,6 @@ const Buildings = () => {
           />
         </Suspense>
       );
-      buildingIndex++;
       // Mark nearby grid cells as occupied (col, row format)
       const col = Math.round(
         (x - startPos - STREET_WIDTH - BLOCK_SIZE / 2) /
@@ -1415,7 +1413,6 @@ const Buildings = () => {
           />
         </Suspense>
       );
-      buildingIndex++;
       // Mark nearby grid cells as occupied (col, row format)
       const col = Math.round(
         (x - startPos - STREET_WIDTH - BLOCK_SIZE / 2) /
@@ -1443,7 +1440,6 @@ const Buildings = () => {
           />
         </Suspense>
       );
-      buildingIndex++;
       // Mark nearby grid cells as occupied (col, row format)
       const col = Math.round(
         (x - startPos - STREET_WIDTH - BLOCK_SIZE / 2) /
@@ -1484,7 +1480,6 @@ const Buildings = () => {
           />
         </Suspense>
       );
-      buildingIndex++;
       // Mark nearby grid cells as occupied (col, row format)
       const col = Math.round(
         (x - startPos - STREET_WIDTH - BLOCK_SIZE / 2) /
@@ -1522,7 +1517,6 @@ const Buildings = () => {
             </Suspense>
           );
           housePlaced = true;
-          buildingIndex++;
           continue;
         }
 
@@ -1549,7 +1543,6 @@ const Buildings = () => {
             />
           </Suspense>
         );
-        buildingIndex++;
       }
     }
 

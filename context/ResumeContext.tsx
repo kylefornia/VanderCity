@@ -443,7 +443,8 @@ const transformResumeData = (): ResumeData => {
   );
 
   // Transform education - handle optional education field
-  const education: Education[] = ((resumeData as any).education || []).map((edu: any, index: number) => {
+  const education: Education[] = ((resumeData as unknown as { education?: unknown[] }).education || []).map((edu: unknown, index: number) => {
+    const eduData = edu as { institution: string; degree: string; graduationDate: string; location: string; description: string; relevantCoursework?: string[]; achievements?: string[]; id?: string };
     // Assign specific colors: first school = white/green, second = red
     let buildingColor: string;
     if (index === 0) {
@@ -454,15 +455,15 @@ const transformResumeData = (): ResumeData => {
 
     return {
       id: `edu-${index + 1}`,
-      school: edu.institution,
-      degree: edu.degree,
-      field: edu.degree.split(" - ")[1] || "",
-      duration: `Graduated ${edu.graduationDate}`,
-      graduationDate: edu.graduationDate,
-      location: edu.location,
+      school: eduData.institution,
+      degree: eduData.degree,
+      field: eduData.degree.split(" - ")[1] || "",
+      duration: `Graduated ${eduData.graduationDate}`,
+      graduationDate: eduData.graduationDate,
+      location: eduData.location,
       description: `Studied ${
-        edu.relevantCoursework?.join(", ") || "various subjects"
-      } at ${edu.institution} in ${edu.location}.`,
+        eduData.relevantCoursework?.join(", ") || "various subjects"
+      } at ${eduData.institution} in ${eduData.location}.`,
       achievements: [],
       buildingPosition: generateSpiralPosition(
         index,
@@ -502,7 +503,7 @@ const transformResumeData = (): ResumeData => {
   });
 
   // Add education positions
-  ((resumeData as any).education || []).forEach((_: any, index: number) => {
+  ((resumeData as unknown as { education?: unknown[] }).education || []).forEach((_: unknown, index: number) => {
     const position = generateSpiralPosition(index, (resumeData.projects || []).length);
     const gridPos = worldToGridPosition(position);
     if (gridPos) {

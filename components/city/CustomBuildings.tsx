@@ -1401,6 +1401,46 @@ const InterestBuildingComponent = ({
 
   const isBasketball = interest?.name.toLowerCase() === "basketball";
 
+  // Calculate scale values for basketball court (needed for useEffect)
+  const basketballScales = useMemo(() => {
+    if (!isBasketball) return null;
+    const courtWidth = width * 0.95;
+    const courtDepth = depth * 0.95;
+    const modelWidth = 10;
+    const modelDepth = 28;
+    const scaleX = courtWidth / modelWidth;
+    const scaleZ = courtDepth / modelDepth;
+    const uniformScale = Math.min(scaleX, scaleZ) * 0.69;
+    return {
+      finalScaleX: uniformScale * 1.1,
+      finalScaleZ: uniformScale,
+    };
+  }, [isBasketball, width, depth]);
+
+  // Calculate bounding box from the actual model after it's loaded and scaled
+  useEffect(() => {
+    if (!isBasketball || !modelGroupRef.current || !basketballScales) return;
+    
+    // Use requestAnimationFrame to ensure the model is rendered before calculating bounding box
+    requestAnimationFrame(() => {
+      if (modelGroupRef.current) {
+        const box = new THREE.Box3();
+        box.setFromObject(modelGroupRef.current);
+
+        if (!box.isEmpty()) {
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          setBoundingBox({
+            width: size.x,
+            height: size.y,
+            depth: size.z,
+            center: center.clone(),
+          });
+        }
+      }
+    });
+  }, [isBasketball, basketballScales]);
+
   // Render outdoor basketball court for basketball interests
   if (isBasketball) {
     const courtWidth = width * 0.95;
@@ -1430,30 +1470,6 @@ const InterestBuildingComponent = ({
     // Use uniform scale to maintain aspect ratio
     const finalScaleX = uniformScale * 1.1;
     const finalScaleZ = uniformScale;
-
-    // Calculate bounding box from the actual model after it's loaded and scaled
-    useEffect(() => {
-      if (modelGroupRef.current) {
-        // Use requestAnimationFrame to ensure the model is rendered before calculating bounding box
-        requestAnimationFrame(() => {
-          if (modelGroupRef.current) {
-            const box = new THREE.Box3();
-            box.setFromObject(modelGroupRef.current);
-
-            if (!box.isEmpty()) {
-              const size = box.getSize(new THREE.Vector3());
-              const center = box.getCenter(new THREE.Vector3());
-              setBoundingBox({
-                width: size.x,
-                height: size.y,
-                depth: size.z,
-                center: center.clone(),
-              });
-            }
-          }
-        });
-      }
-    }, [finalScaleX, finalScaleZ]);
 
     return (
       <group position={position}>

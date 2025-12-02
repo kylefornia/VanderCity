@@ -23,7 +23,7 @@ import {
   IoSearchOutline,
   IoStarOutline,
 } from "react-icons/io5";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useResume } from "@/context/ResumeContext";
@@ -138,7 +138,7 @@ const ResumeUI = () => {
   };
 
 
-  const handleSheetDragEnd = () => {
+  const handleSheetDragEnd = useCallback(() => {
     if (!isMobile || !isDragging) return;
 
     // Use ref to get the most current drag distance (state might be stale)
@@ -199,7 +199,7 @@ const ResumeUI = () => {
 
     // Set the new state
     setSheetState(newState);
-  };
+  }, [isMobile, isDragging]);
 
   // Add global mouse/touch listeners for dragging
   useEffect(() => {
@@ -242,7 +242,7 @@ const ResumeUI = () => {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isMobile, isDragging, sheetDragY]);
+  }, [isMobile, isDragging, sheetDragY, handleSheetDragEnd]);
 
   const handleKeyDownToggle = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {

@@ -15,7 +15,7 @@ interface CameraContextType {
 const CameraContext = createContext<CameraContextType | undefined>(undefined);
 
 // Global animation state (outside React to avoid re-renders)
-let animationState: {
+const animationState: {
   isAnimating: boolean;
   startPosition: THREE.Vector3;
   startTarget: THREE.Vector3;

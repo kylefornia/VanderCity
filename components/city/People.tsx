@@ -241,7 +241,7 @@ const People = () => {
           }
           break;
 
-        case 2: // Long horizontal path across multiple blocks
+        case 2: { // Long horizontal path across multiple blocks
           const horizontalStart = Math.max(blockStartX - BLOCK_SIZE, -groundBound);
           const horizontalEnd = Math.min(blockEndX + BLOCK_SIZE, groundBound);
           for (let x = horizontalStart; x <= horizontalEnd; x += stepSize) {
@@ -254,8 +254,9 @@ const People = () => {
             );
           }
           break;
+        }
 
-        case 3: // Long vertical path across multiple blocks
+        case 3: { // Long vertical path across multiple blocks
           const verticalStart = Math.max(blockStartZ - BLOCK_SIZE, -groundBound);
           const verticalEnd = Math.min(blockEndZ + BLOCK_SIZE, groundBound);
           for (let z = verticalStart; z <= verticalEnd; z += stepSize) {
@@ -268,8 +269,9 @@ const People = () => {
             );
           }
           break;
+        }
 
-        case 4: // Square loop around multiple blocks
+        case 4: { // Square loop around multiple blocks
           // Create a larger square path
           const loopSize = BLOCK_SIZE * 2;
           const loopStartX = blockCenterX - loopSize / 2;
@@ -302,6 +304,7 @@ const People = () => {
             }
           }
           break;
+        }
       }
 
       // Remove duplicate consecutive points and ensure path loops

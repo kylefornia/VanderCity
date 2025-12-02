@@ -1,6 +1,7 @@
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
+import type { OrbitControls as OrbitControlsType } from "three-stdlib";
 import { useMemo, useRef, useCallback, useEffect, Suspense, lazy } from "react";
 import { ResumeProvider } from "@/context/ResumeContext";
 import { CameraProvider, useCamera } from "@/context/CameraContext";
@@ -128,12 +129,12 @@ const GradientSky = () => {
 };
 
 const SceneWithControls = () => {
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef<OrbitControlsType | null>(null);
   const directionalLightRef = useRef<THREE.DirectionalLight>(null);
   const { setControlsRef } = useCamera();
 
   // Set controls ref when it's available
-  const handleControlsRef = useCallback((node: any) => {
+  const handleControlsRef = useCallback((node: OrbitControlsType | null) => {
     controlsRef.current = node;
     if (node) {
       setControlsRef(controlsRef);
